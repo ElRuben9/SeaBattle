@@ -5,11 +5,8 @@
 package com.mycompany.proyectoseabattle;
 
 import java.awt.Color;
-import java.awt.Image;
-import javax.swing.Icon;
-import javax.swing.ImageIcon;
-import javax.swing.JLabel;
 import utilerias.BotonPersonalizado;
+import utilerias.PersonalizacionGeneral;
 
 /**
  *
@@ -36,7 +33,7 @@ public class PantallaPrincipal extends javax.swing.JFrame {
     
     
     private void cargarInterfaz(){
-        colocarImagenLabel(jblFondo, fondo);
+        PersonalizacionGeneral.colocarImagenLabel(jblFondo, fondo);
         
         
         personazilarBotones();
@@ -48,48 +45,21 @@ public class PantallaPrincipal extends javax.swing.JFrame {
         btnJugar.setContentAreaFilled(false);
         btnJugar.setBorderPainted(false);
         btnJugar.setOpaque(false);
-        btnJugar.setUI(new BotonPersonalizado(25, new Color(0, 166, 255), new Color(82, 250, 255)));
+        btnJugar.setUI(new BotonPersonalizado(25, new Color(0, 166, 255), new Color(82, 250, 255) ,3 ));
         
         
         btnOpciones.setContentAreaFilled(false);
         btnOpciones.setBorderPainted(false);
         btnOpciones.setOpaque(false);
-        btnOpciones.setUI(new BotonPersonalizado(25, new Color(0, 166, 255), new Color(82, 250, 255)));
+        btnOpciones.setUI(new BotonPersonalizado(25, new Color(0, 166, 255), new Color(82, 250, 255) ,3));
         
         
         btnSalir.setContentAreaFilled(false);
         btnSalir.setBorderPainted(false);
         btnSalir.setOpaque(false);
-        btnSalir.setUI(new BotonPersonalizado(25, new Color(0, 166, 255), new Color(82, 250, 255)));
+        btnSalir.setUI(new BotonPersonalizado(25, new Color(0, 166, 255), new Color(82, 250, 255) ,3));
         
     }
-    
-    
-    
-     /**
-     * Metodo que coloca una imagen a un jbl
-     * @param nombreJlb el jlabel que sera reemplazado por una imagen
-     * @param ruta la direccion donde se encuentra la imagen
-     */
-    private void colocarImagenLabel(JLabel nombreJlb, String ruta){
-
-        ImageIcon imageIcon = new ImageIcon(ruta);
-        Icon icon = new ImageIcon(imageIcon.getImage().getScaledInstance(nombreJlb.getWidth(),
-                                  nombreJlb.getHeight(), Image.SCALE_SMOOTH));
-        
-        nombreJlb.setIcon(icon); 
-
-        nombreJlb.repaint();
-        
-    }
-    
-    
-    
-    
-    
-    
-    
-    
     
     
     
@@ -210,6 +180,11 @@ public class PantallaPrincipal extends javax.swing.JFrame {
 
     private void btnOpcionesMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_btnOpcionesMouseClicked
         // TODO add your handling code here:
+        
+        PantallaConfiguracion confi = new PantallaConfiguracion(this);
+        confi.setVisible(true);
+        
+        this.setVisible(false);
     }//GEN-LAST:event_btnOpcionesMouseClicked
 
     /**
