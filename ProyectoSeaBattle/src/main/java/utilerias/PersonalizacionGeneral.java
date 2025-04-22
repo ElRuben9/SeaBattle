@@ -51,6 +51,7 @@ public class PersonalizacionGeneral {
      * Metodo que coloca una imagen con desenfoque a un jbl
      * @param nombreJlb el jlabel que sera reemplazado por una imagen
      * @param ruta la direccion donde se encuentra la imagen
+     * @param radioDesenfoque es el nivel de desenfoque que se le aplicara a la imagen
      */
     public static void colocarImagenDesenfocadaLabel(JLabel nombreJlb, String ruta, int radioDesenfoque) throws IOException{
         
