@@ -14,6 +14,7 @@ import java.io.IOException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import utilerias.BotonPersonalizado;
+import utilerias.PanelTransparente;
 import utilerias.PersonalizacionGeneral;
 
 /**
@@ -97,7 +98,7 @@ public class PantallaResultado extends javax.swing.JFrame {
     private void initComponents() {
 
         jPanelFondo = new javax.swing.JPanel();
-        jPanel1 = new javax.swing.JPanel();
+        jPanel1 = new PanelTransparente((float) 0.35);
         jblGanador = new javax.swing.JLabel();
         jblNombreGanador = new javax.swing.JLabel();
         jPanelHead = new javax.swing.JPanel();
@@ -150,7 +151,7 @@ public class PantallaResultado extends javax.swing.JFrame {
 
         jPanelHead.setBackground(new java.awt.Color(13, 26, 51));
 
-        jblResultado.setFont(new java.awt.Font("Segoe UI", 0, 24)); // NOI18N
+        jblResultado.setFont(new java.awt.Font("Monospaced", 0, 24)); // NOI18N
         jblResultado.setForeground(new java.awt.Color(255, 255, 255));
         jblResultado.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
         jblResultado.setText("Resultado");
@@ -173,7 +174,7 @@ public class PantallaResultado extends javax.swing.JFrame {
                 .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanelHeadLayout.createSequentialGroup()
                     .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                     .addComponent(jblResultado)
-                    .addContainerGap(12, Short.MAX_VALUE)))
+                    .addContainerGap(11, Short.MAX_VALUE)))
         );
 
         jPanelFondo.add(jPanelHead);

@@ -54,13 +54,12 @@ public class PantallaConfiguracion extends javax.swing.JFrame {
         try {
             
             PersonalizacionGeneral.colocarImagenDesenfocadaLabel(jblFondo, fondo, 12);
+            personazilarBotones();
         }
         catch (IOException ex) {
             Logger.getLogger(PantallaConfiguracion.class.getName()).log(Level.SEVERE, null, ex);
         }
         
-        
-        personazilarBotones();
     }
     
     
@@ -108,8 +107,8 @@ public class PantallaConfiguracion extends javax.swing.JFrame {
         jPanelFondo = new javax.swing.JPanel();
         jPanelHead = new javax.swing.JPanel();
         jblConfiguracion = new javax.swing.JLabel();
-        jPanelConfiguracion = new PanelTransparente();
-        jPanelBaseColores = new javax.swing.JPanel();
+        jPanelConfiguracion = new PanelTransparente((float)0.35);
+        jPanelBaseColores = new PanelTransparente((float) 0.35);
         jPanelColores = new javax.swing.JPanel();
         jPanelColor1 = new javax.swing.JPanel();
         jPanelColor2 = new javax.swing.JPanel();
@@ -117,6 +116,7 @@ public class PantallaConfiguracion extends javax.swing.JFrame {
         jPanelColor4 = new javax.swing.JPanel();
         jTextField1 = new javax.swing.JTextField();
         jLabel1 = new javax.swing.JLabel();
+        jLabel2 = new javax.swing.JLabel();
         btnVolver = new javax.swing.JButton();
         btnGuardar = new javax.swing.JButton();
         jblFondo = new javax.swing.JLabel();
@@ -130,7 +130,7 @@ public class PantallaConfiguracion extends javax.swing.JFrame {
 
         jPanelHead.setBackground(new java.awt.Color(13, 26, 51));
 
-        jblConfiguracion.setFont(new java.awt.Font("Segoe UI", 0, 24)); // NOI18N
+        jblConfiguracion.setFont(new java.awt.Font("Monospaced", 0, 24)); // NOI18N
         jblConfiguracion.setForeground(new java.awt.Color(255, 255, 255));
         jblConfiguracion.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
         jblConfiguracion.setText("Configuracion");
@@ -306,6 +306,10 @@ public class PantallaConfiguracion extends javax.swing.JFrame {
         jLabel1.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
         jLabel1.setText("Usuario");
 
+        jLabel2.setFont(new java.awt.Font("Monospaced", 1, 24)); // NOI18N
+        jLabel2.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
+        jLabel2.setText("Color del Jugador");
+
         javax.swing.GroupLayout jPanelConfiguracionLayout = new javax.swing.GroupLayout(jPanelConfiguracion);
         jPanelConfiguracion.setLayout(jPanelConfiguracionLayout);
         jPanelConfiguracionLayout.setHorizontalGroup(
@@ -320,6 +324,10 @@ public class PantallaConfiguracion extends javax.swing.JFrame {
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                 .addComponent(jTextField1, javax.swing.GroupLayout.PREFERRED_SIZE, 269, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addGap(92, 92, 92))
+            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanelConfiguracionLayout.createSequentialGroup()
+                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                .addComponent(jLabel2, javax.swing.GroupLayout.PREFERRED_SIZE, 297, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addGap(220, 220, 220))
         );
         jPanelConfiguracionLayout.setVerticalGroup(
             jPanelConfiguracionLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -328,9 +336,11 @@ public class PantallaConfiguracion extends javax.swing.JFrame {
                 .addGroup(jPanelConfiguracionLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addComponent(jLabel1, javax.swing.GroupLayout.PREFERRED_SIZE, 50, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addComponent(jTextField1, javax.swing.GroupLayout.PREFERRED_SIZE, 50, javax.swing.GroupLayout.PREFERRED_SIZE))
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 53, Short.MAX_VALUE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 20, Short.MAX_VALUE)
+                .addComponent(jLabel2, javax.swing.GroupLayout.PREFERRED_SIZE, 50, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                 .addComponent(jPanelBaseColores, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addGap(54, 54, 54))
+                .addGap(25, 25, 25))
         );
 
         jPanelFondo.add(jPanelConfiguracion);
@@ -532,6 +542,7 @@ public class PantallaConfiguracion extends javax.swing.JFrame {
     private javax.swing.JButton btnGuardar;
     private javax.swing.JButton btnVolver;
     private javax.swing.JLabel jLabel1;
+    private javax.swing.JLabel jLabel2;
     private javax.swing.JPanel jPanelBaseColores;
     private javax.swing.JPanel jPanelColor1;
     private javax.swing.JPanel jPanelColor2;

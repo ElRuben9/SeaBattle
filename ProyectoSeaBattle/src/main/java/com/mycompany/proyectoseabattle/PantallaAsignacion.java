@@ -4,19 +4,69 @@
  */
 package com.mycompany.proyectoseabattle;
 
+import java.awt.Color;
+import utilerias.BotonPersonalizado;
+import utilerias.PanelTransparente;
+import utilerias.PersonalizacionGeneral;
+
 /**
  *
  * @author ruben
  */
 public class PantallaAsignacion extends javax.swing.JFrame {
 
+    
+    String fondo = "recursos/interfaz/fondoPantallaPartida.png";
+    
+    PantallaEscogerPartida escoger;
+    
+    
     /**
      * Creates new form PantallaAsignacion
+     * @param escoger
      */
-    public PantallaAsignacion() {
+    public PantallaAsignacion(PantallaEscogerPartida escoger) {
         initComponents();
+        
+        this.escoger = escoger;
+        
+        cargarInterfaz();
     }
 
+    
+    
+    private void cargarInterfaz(){
+        
+        
+        PersonalizacionGeneral.colocarImagenLabel(jblFondo, fondo);
+       // PersonalizacionGeneral.imagenAJLabelMaxCalidad(jblIconApuntar, "recursos/iconos/apuntar.png");
+        
+        personazilarBotones();
+    }
+    
+    
+        private void personazilarBotones(){
+        
+        btnConfirmar.setContentAreaFilled(false);
+        btnConfirmar.setBorderPainted(false);
+        btnConfirmar.setOpaque(false);
+        btnConfirmar.setUI(new BotonPersonalizado(25, new Color(21, 255, 0), new Color(21, 255, 168), 3));
+        
+        
+        btnVolver.setContentAreaFilled(false);
+        btnVolver.setBorderPainted(false);
+        btnVolver.setOpaque(false);
+        btnVolver.setUI(new BotonPersonalizado(25, new Color(0, 166, 255), new Color(82, 250, 255), 3));
+        
+        btnGirar.setContentAreaFilled(false);
+        btnGirar.setBorderPainted(false);
+        btnGirar.setOpaque(false);
+        btnGirar.setUI(new BotonPersonalizado(25, new Color(0, 166, 255), new Color(82, 250, 255), 3));
+        
+    }
+    
+    
+    
     /**
      * This method is called from within the constructor to initialize the form.
      * WARNING: Do NOT modify this code. The content of this method is always
@@ -26,57 +76,261 @@ public class PantallaAsignacion extends javax.swing.JFrame {
     // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
     private void initComponents() {
 
+        jPanelFondo = new javax.swing.JPanel();
+        jPanelHead = new javax.swing.JPanel();
+        jblConfiguracion1 = new javax.swing.JLabel();
+        btnVolver = new javax.swing.JButton();
+        jPanelTiposNaves = new PanelTransparente((float) 0.35);
+        jblTiposNave = new javax.swing.JLabel();
+        jPanelNombreJugador = new PanelTransparente((float) 0.35);
+        jblNombreJugador = new javax.swing.JLabel();
+        jPanelEsperando = new PanelTransparente((float) 0.35);
+        jblEsperando = new javax.swing.JLabel();
+        jPanelDerechos = new javax.swing.JPanel();
+        jblDerechos = new javax.swing.JLabel();
+        jblIconApuntar = new javax.swing.JLabel();
+        btnConfirmar = new javax.swing.JButton();
+        btnGirar = new javax.swing.JButton();
+        jblFondo = new javax.swing.JLabel();
+
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
+        setTitle("Asignar Barcos");
+
+        jPanelFondo.setLayout(null);
+
+        jPanelHead.setBackground(new java.awt.Color(13, 26, 51));
+
+        jblConfiguracion1.setFont(new java.awt.Font("Monospaced", 0, 22)); // NOI18N
+        jblConfiguracion1.setForeground(new java.awt.Color(255, 255, 255));
+        jblConfiguracion1.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
+        jblConfiguracion1.setText("ID partida: 172.72.82...");
+
+        btnVolver.setBackground(new java.awt.Color(0, 166, 255));
+        btnVolver.setFont(new java.awt.Font("Monospaced", 1, 18)); // NOI18N
+        btnVolver.setForeground(new java.awt.Color(0, 0, 0));
+        btnVolver.setText("Volver");
+        btnVolver.addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mouseClicked(java.awt.event.MouseEvent evt) {
+                btnVolverMouseClicked(evt);
+            }
+        });
+
+        javax.swing.GroupLayout jPanelHeadLayout = new javax.swing.GroupLayout(jPanelHead);
+        jPanelHead.setLayout(jPanelHeadLayout);
+        jPanelHeadLayout.setHorizontalGroup(
+            jPanelHeadLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(jPanelHeadLayout.createSequentialGroup()
+                .addGap(21, 21, 21)
+                .addComponent(btnVolver, javax.swing.GroupLayout.PREFERRED_SIZE, 120, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addContainerGap(809, Short.MAX_VALUE))
+            .addGroup(jPanelHeadLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanelHeadLayout.createSequentialGroup()
+                    .addContainerGap(235, Short.MAX_VALUE)
+                    .addComponent(jblConfiguracion1, javax.swing.GroupLayout.PREFERRED_SIZE, 412, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addContainerGap(303, Short.MAX_VALUE)))
+        );
+        jPanelHeadLayout.setVerticalGroup(
+            jPanelHeadLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanelHeadLayout.createSequentialGroup()
+                .addContainerGap(19, Short.MAX_VALUE)
+                .addComponent(btnVolver, javax.swing.GroupLayout.PREFERRED_SIZE, 35, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addContainerGap())
+            .addGroup(jPanelHeadLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanelHeadLayout.createSequentialGroup()
+                    .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                    .addComponent(jblConfiguracion1, javax.swing.GroupLayout.PREFERRED_SIZE, 47, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addContainerGap(7, Short.MAX_VALUE)))
+        );
+
+        jPanelFondo.add(jPanelHead);
+        jPanelHead.setBounds(0, 0, 950, 60);
+
+        jPanelTiposNaves.setBackground(new java.awt.Color(255, 255, 255));
+
+        jblTiposNave.setFont(new java.awt.Font("Monospaced", 1, 14)); // NOI18N
+        jblTiposNave.setForeground(new java.awt.Color(0, 0, 0));
+        jblTiposNave.setHorizontalAlignment(javax.swing.SwingConstants.LEFT);
+        jblTiposNave.setText("Tipos de nave");
+
+        javax.swing.GroupLayout jPanelTiposNavesLayout = new javax.swing.GroupLayout(jPanelTiposNaves);
+        jPanelTiposNaves.setLayout(jPanelTiposNavesLayout);
+        jPanelTiposNavesLayout.setHorizontalGroup(
+            jPanelTiposNavesLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanelTiposNavesLayout.createSequentialGroup()
+                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                .addComponent(jblTiposNave, javax.swing.GroupLayout.PREFERRED_SIZE, 343, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addContainerGap(11, Short.MAX_VALUE))
+        );
+        jPanelTiposNavesLayout.setVerticalGroup(
+            jPanelTiposNavesLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanelTiposNavesLayout.createSequentialGroup()
+                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                .addComponent(jblTiposNave)
+                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+        );
+
+        jPanelFondo.add(jPanelTiposNaves);
+        jPanelTiposNaves.setBounds(500, 130, 360, 32);
+
+        jPanelNombreJugador.setBackground(new java.awt.Color(255, 255, 255));
+
+        jblNombreJugador.setFont(new java.awt.Font("Monospaced", 1, 14)); // NOI18N
+        jblNombreJugador.setForeground(new java.awt.Color(0, 0, 0));
+        jblNombreJugador.setHorizontalAlignment(javax.swing.SwingConstants.LEFT);
+        jblNombreJugador.setText("Tablero de: Jack Sparrow");
+
+        javax.swing.GroupLayout jPanelNombreJugadorLayout = new javax.swing.GroupLayout(jPanelNombreJugador);
+        jPanelNombreJugador.setLayout(jPanelNombreJugadorLayout);
+        jPanelNombreJugadorLayout.setHorizontalGroup(
+            jPanelNombreJugadorLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanelNombreJugadorLayout.createSequentialGroup()
+                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                .addComponent(jblNombreJugador, javax.swing.GroupLayout.PREFERRED_SIZE, 345, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addContainerGap(9, Short.MAX_VALUE))
+        );
+        jPanelNombreJugadorLayout.setVerticalGroup(
+            jPanelNombreJugadorLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanelNombreJugadorLayout.createSequentialGroup()
+                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                .addComponent(jblNombreJugador)
+                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+        );
+
+        jPanelFondo.add(jPanelNombreJugador);
+        jPanelNombreJugador.setBounds(20, 130, 360, 32);
+
+        jPanelEsperando.setBackground(new java.awt.Color(255, 255, 255));
+
+        jblEsperando.setFont(new java.awt.Font("Monospaced", 1, 22)); // NOI18N
+        jblEsperando.setForeground(new java.awt.Color(0, 0, 0));
+        jblEsperando.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
+        jblEsperando.setText("Esperando Jugadores");
+
+        javax.swing.GroupLayout jPanelEsperandoLayout = new javax.swing.GroupLayout(jPanelEsperando);
+        jPanelEsperando.setLayout(jPanelEsperandoLayout);
+        jPanelEsperandoLayout.setHorizontalGroup(
+            jPanelEsperandoLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanelEsperandoLayout.createSequentialGroup()
+                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                .addComponent(jblEsperando, javax.swing.GroupLayout.PREFERRED_SIZE, 346, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addContainerGap(8, Short.MAX_VALUE))
+        );
+        jPanelEsperandoLayout.setVerticalGroup(
+            jPanelEsperandoLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanelEsperandoLayout.createSequentialGroup()
+                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                .addComponent(jblEsperando, javax.swing.GroupLayout.PREFERRED_SIZE, 39, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+        );
+
+        jPanelFondo.add(jPanelEsperando);
+        jPanelEsperando.setBounds(510, 470, 360, 50);
+
+        jPanelDerechos.setBackground(new java.awt.Color(13, 26, 51));
+
+        jblDerechos.setFont(new java.awt.Font("Segoe UI", 0, 14)); // NOI18N
+        jblDerechos.setForeground(new java.awt.Color(255, 255, 255));
+        jblDerechos.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
+        jblDerechos.setText("© 2025 Batalla Naval. Todos los derechos reservados.");
+
+        javax.swing.GroupLayout jPanelDerechosLayout = new javax.swing.GroupLayout(jPanelDerechos);
+        jPanelDerechos.setLayout(jPanelDerechosLayout);
+        jPanelDerechosLayout.setHorizontalGroup(
+            jPanelDerechosLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(jPanelDerechosLayout.createSequentialGroup()
+                .addContainerGap()
+                .addComponent(jblDerechos, javax.swing.GroupLayout.DEFAULT_SIZE, 938, Short.MAX_VALUE)
+                .addContainerGap())
+        );
+        jPanelDerechosLayout.setVerticalGroup(
+            jPanelDerechosLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addComponent(jblDerechos, javax.swing.GroupLayout.DEFAULT_SIZE, 50, Short.MAX_VALUE)
+        );
+
+        jPanelFondo.add(jPanelDerechos);
+        jPanelDerechos.setBounds(0, 550, 950, 50);
+
+        jblIconApuntar.setText("jLabel1");
+        jPanelFondo.add(jblIconApuntar);
+        jblIconApuntar.setBounds(515, 420, 32, 32);
+
+        btnConfirmar.setBackground(new java.awt.Color(0, 166, 255));
+        btnConfirmar.setFont(new java.awt.Font("Monospaced", 1, 14)); // NOI18N
+        btnConfirmar.setForeground(new java.awt.Color(0, 0, 0));
+        btnConfirmar.setText("Confirmar");
+        btnConfirmar.setHorizontalTextPosition(javax.swing.SwingConstants.LEADING);
+        btnConfirmar.addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mouseClicked(java.awt.event.MouseEvent evt) {
+                btnConfirmarMouseClicked(evt);
+            }
+        });
+        jPanelFondo.add(btnConfirmar);
+        btnConfirmar.setBounds(750, 415, 120, 40);
+
+        btnGirar.setBackground(new java.awt.Color(0, 166, 255));
+        btnGirar.setFont(new java.awt.Font("Monospaced", 1, 18)); // NOI18N
+        btnGirar.setForeground(new java.awt.Color(0, 0, 0));
+        btnGirar.setText("Girar");
+        btnGirar.setHorizontalTextPosition(javax.swing.SwingConstants.LEFT);
+        btnGirar.addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mouseClicked(java.awt.event.MouseEvent evt) {
+                btnGirarMouseClicked(evt);
+            }
+        });
+        jPanelFondo.add(btnGirar);
+        btnGirar.setBounds(510, 415, 120, 40);
+
+        jblFondo.setFont(new java.awt.Font("Monospaced", 0, 18)); // NOI18N
+        jPanelFondo.add(jblFondo);
+        jblFondo.setBounds(0, 0, 950, 550);
 
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
         getContentPane().setLayout(layout);
         layout.setHorizontalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGap(0, 400, Short.MAX_VALUE)
+            .addComponent(jPanelFondo, javax.swing.GroupLayout.DEFAULT_SIZE, 950, Short.MAX_VALUE)
         );
         layout.setVerticalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGap(0, 300, Short.MAX_VALUE)
+            .addComponent(jPanelFondo, javax.swing.GroupLayout.DEFAULT_SIZE, 600, Short.MAX_VALUE)
         );
 
         pack();
+        setLocationRelativeTo(null);
     }// </editor-fold>//GEN-END:initComponents
 
-    /**
-     * @param args the command line arguments
-     */
-    public static void main(String args[]) {
-        /* Set the Nimbus look and feel */
-        //<editor-fold defaultstate="collapsed" desc=" Look and feel setting code (optional) ">
-        /* If Nimbus (introduced in Java SE 6) is not available, stay with the default look and feel.
-         * For details see http://download.oracle.com/javase/tutorial/uiswing/lookandfeel/plaf.html 
-         */
-        try {
-            for (javax.swing.UIManager.LookAndFeelInfo info : javax.swing.UIManager.getInstalledLookAndFeels()) {
-                if ("Nimbus".equals(info.getName())) {
-                    javax.swing.UIManager.setLookAndFeel(info.getClassName());
-                    break;
-                }
-            }
-        } catch (ClassNotFoundException ex) {
-            java.util.logging.Logger.getLogger(PantallaAsignacion.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
-        } catch (InstantiationException ex) {
-            java.util.logging.Logger.getLogger(PantallaAsignacion.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
-        } catch (IllegalAccessException ex) {
-            java.util.logging.Logger.getLogger(PantallaAsignacion.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
-        } catch (javax.swing.UnsupportedLookAndFeelException ex) {
-            java.util.logging.Logger.getLogger(PantallaAsignacion.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
-        }
-        //</editor-fold>
+    private void btnConfirmarMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_btnConfirmarMouseClicked
+        // TODO add your handling code here:
+    }//GEN-LAST:event_btnConfirmarMouseClicked
 
-        /* Create and display the form */
-        java.awt.EventQueue.invokeLater(new Runnable() {
-            public void run() {
-                new PantallaAsignacion().setVisible(true);
-            }
-        });
-    }
+    private void btnGirarMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_btnGirarMouseClicked
+        // TODO add your handling code here:
+    }//GEN-LAST:event_btnGirarMouseClicked
+
+    private void btnVolverMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_btnVolverMouseClicked
+        // TODO add your handling code here:
+        escoger.setVisible(true);
+        this.dispose();
+    }//GEN-LAST:event_btnVolverMouseClicked
+
+
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
+    private javax.swing.JButton btnConfirmar;
+    private javax.swing.JButton btnGirar;
+    private javax.swing.JButton btnVolver;
+    private javax.swing.JPanel jPanelDerechos;
+    private javax.swing.JPanel jPanelEsperando;
+    private javax.swing.JPanel jPanelFondo;
+    private javax.swing.JPanel jPanelHead;
+    private javax.swing.JPanel jPanelNombreJugador;
+    private javax.swing.JPanel jPanelTiposNaves;
+    private javax.swing.JLabel jblConfiguracion1;
+    private javax.swing.JLabel jblDerechos;
+    private javax.swing.JLabel jblEsperando;
+    private javax.swing.JLabel jblFondo;
+    private javax.swing.JLabel jblIconApuntar;
+    private javax.swing.JLabel jblNombreJugador;
+    private javax.swing.JLabel jblTiposNave;
     // End of variables declaration//GEN-END:variables
 }

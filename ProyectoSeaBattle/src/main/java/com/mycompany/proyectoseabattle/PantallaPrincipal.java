@@ -176,6 +176,10 @@ public class PantallaPrincipal extends javax.swing.JFrame {
 
     private void btnJugarMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_btnJugarMouseClicked
         // TODO add your handling code here:
+        
+        PantallaEscogerPartida partida = new PantallaEscogerPartida(this);
+        partida.setVisible(true);
+        this.setVisible(false);
     }//GEN-LAST:event_btnJugarMouseClicked
 
     private void btnOpcionesMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_btnOpcionesMouseClicked

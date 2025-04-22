@@ -16,18 +16,33 @@ import javax.swing.JPanel;
 public class PanelTransparente extends JPanel{
     
 
-    private float alpha = 0.5f; 
+    private float alpha = 0.35f; 
+    private int arcWidth = 20;  
+    private int arcHeight = 20;
+    
 
-    public PanelTransparente() {
+    public PanelTransparente(float alpha) {
         setOpaque(false); 
+        this.alpha = alpha;
+    }
+    
+    
+    public void setRoundedCorners(int arcWidth, int arcHeight) {
+        this.arcWidth = arcWidth;
+        this.arcHeight = arcHeight;
+        repaint();
     }
 
     @Override
     protected void paintComponent(Graphics g) {
         Graphics2D g2 = (Graphics2D) g.create();
+
         g2.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, alpha));
         g2.setColor(getBackground());
-        g2.fillRect(0, 0, getWidth(), getHeight());
+
+        // Dibuja el fondo con esquinas redondeadas
+        g2.fillRoundRect(0, 0, getWidth(), getHeight(), arcWidth, arcHeight);
+
         g2.dispose();
         super.paintComponent(g);
     }
