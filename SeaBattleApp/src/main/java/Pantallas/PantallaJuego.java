@@ -9,8 +9,9 @@ import utilerias.BotonPersonalizado;
 import utilerias.PanelTransparente;
 import utilerias.PersonalizacionGeneral;
 import negocio.*;
-import DAOs.JuegoDAO;
-import javax.swing.*;
+import javax.swing.JButton;
+import javax.swing.JOptionPane;
+import javax.swing.JPanel;
 
 /**
  *
@@ -40,7 +41,8 @@ public class PantallaJuego extends javax.swing.JFrame {
         PersonalizacionGeneral.colocarImagenLabel(jblFondo, fondo);
 
         personazilarBotones();
-        crearTablero();
+        crearTableroJugador1();
+        crearTableroJugador2();
     }
 
     private void personazilarBotones() {
@@ -57,9 +59,9 @@ public class PantallaJuego extends javax.swing.JFrame {
 
     }
 
-  private void crearTablero() {
+  private void crearTableroJugador1() {
     JPanel panelGrid = new JPanel(new java.awt.GridLayout(10, 10));
-    panelGrid.setBounds(100, 100, 400, 400);
+    panelGrid.setBounds(20, 140, 390, 325);
     panelGrid.setOpaque(false);
 
     for (int i = 0; i < 10; i++) {
@@ -77,8 +79,33 @@ public class PantallaJuego extends javax.swing.JFrame {
         }
     }
 
-    this.getContentPane().add(panelGrid);
+    this.getContentPane().add(panelGrid, 0);
 }
+  
+  
+  private void crearTableroJugador2() {
+    JPanel panelGrid = new JPanel(new java.awt.GridLayout(10, 10));
+    panelGrid.setBounds(540, 140, 390, 325);
+    panelGrid.setOpaque(false);
+
+    for (int i = 0; i < 10; i++) {
+        for (int j = 0; j < 10; j++) {
+            JButton boton = new JButton();
+            boton.setBackground(new Color(173, 216, 230));
+            boton.setFocusPainted(false);
+            int x = i;
+            int y = j;
+
+            boton.addActionListener(e -> disparar(x, y));
+
+            botonesTablero[i][j] = boton;
+            panelGrid.add(boton);
+        }
+    }
+
+    this.getContentPane().add(panelGrid, 0);
+}  
+
 
 
    private void disparar(int x, int y) {
@@ -123,8 +150,8 @@ private void actualizarTurnoEnPantalla() {
         jblTurno = new javax.swing.JLabel();
         btnAbandonar = new javax.swing.JButton();
         jblTiempo = new javax.swing.JLabel();
-        jPanelTiposNaves = new PanelTransparente((float) 0.35);
-        jblTiposNave = new javax.swing.JLabel();
+        jPanelNombreJugador2 = new PanelTransparente((float) 0.35);
+        jblNombreJugador2 = new javax.swing.JLabel();
         jPanelNombreJugador = new PanelTransparente((float) 0.35);
         jblNombreJugador = new javax.swing.JLabel();
         jPanelDerechos = new javax.swing.JPanel();
@@ -137,11 +164,14 @@ private void actualizarTurnoEnPantalla() {
         jPanelFondo.setLayout(null);
 
         jPanelHead.setBackground(new java.awt.Color(13, 26, 51));
+        jPanelHead.setLayout(null);
 
         jblTurno.setFont(new java.awt.Font("Monospaced", 0, 22)); // NOI18N
         jblTurno.setForeground(new java.awt.Color(255, 255, 255));
         jblTurno.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
         jblTurno.setText("Turno: Jack Sparrow");
+        jPanelHead.add(jblTurno);
+        jblTurno.setBounds(235, 6, 412, 47);
 
         btnAbandonar.setBackground(new java.awt.Color(0, 166, 255));
         btnAbandonar.setFont(new java.awt.Font("Monospaced", 1, 18)); // NOI18N
@@ -151,77 +181,45 @@ private void actualizarTurnoEnPantalla() {
                 btnAbandonarMouseClicked(evt);
             }
         });
+        jPanelHead.add(btnAbandonar);
+        btnAbandonar.setBounds(20, 14, 142, 35);
 
         jblTiempo.setFont(new java.awt.Font("Monospaced", 1, 28)); // NOI18N
         jblTiempo.setForeground(new java.awt.Color(255, 255, 255));
         jblTiempo.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
         jblTiempo.setText("30");
-
-        javax.swing.GroupLayout jPanelHeadLayout = new javax.swing.GroupLayout(jPanelHead);
-        jPanelHead.setLayout(jPanelHeadLayout);
-        jPanelHeadLayout.setHorizontalGroup(
-            jPanelHeadLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(jPanelHeadLayout.createSequentialGroup()
-                .addGap(21, 21, 21)
-                .addComponent(btnAbandonar, javax.swing.GroupLayout.PREFERRED_SIZE, 142, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addContainerGap(787, Short.MAX_VALUE))
-            .addGroup(jPanelHeadLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanelHeadLayout.createSequentialGroup()
-                    .addContainerGap(235, Short.MAX_VALUE)
-                    .addComponent(jblTurno, javax.swing.GroupLayout.PREFERRED_SIZE, 412, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addContainerGap(303, Short.MAX_VALUE)))
-            .addGroup(jPanelHeadLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                .addGroup(jPanelHeadLayout.createSequentialGroup()
-                    .addGap(857, 857, 857)
-                    .addComponent(jblTiempo, javax.swing.GroupLayout.PREFERRED_SIZE, 75, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addContainerGap(18, Short.MAX_VALUE)))
-        );
-        jPanelHeadLayout.setVerticalGroup(
-            jPanelHeadLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanelHeadLayout.createSequentialGroup()
-                .addContainerGap(19, Short.MAX_VALUE)
-                .addComponent(btnAbandonar, javax.swing.GroupLayout.PREFERRED_SIZE, 35, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addContainerGap())
-            .addGroup(jPanelHeadLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanelHeadLayout.createSequentialGroup()
-                    .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                    .addComponent(jblTurno, javax.swing.GroupLayout.PREFERRED_SIZE, 47, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addContainerGap(7, Short.MAX_VALUE)))
-            .addGroup(jPanelHeadLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanelHeadLayout.createSequentialGroup()
-                    .addContainerGap(7, Short.MAX_VALUE)
-                    .addComponent(jblTiempo, javax.swing.GroupLayout.PREFERRED_SIZE, 47, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addContainerGap()))
-        );
+        jPanelHead.add(jblTiempo);
+        jblTiempo.setBounds(857, 7, 75, 47);
 
         jPanelFondo.add(jPanelHead);
-        jPanelHead.setBounds(0, 0, 0, 0);
+        jPanelHead.setBounds(0, 0, 950, 60);
 
-        jPanelTiposNaves.setBackground(new java.awt.Color(255, 255, 255));
+        jPanelNombreJugador2.setBackground(new java.awt.Color(255, 255, 255));
+        jPanelNombreJugador2.setMinimumSize(new java.awt.Dimension(390, 32));
 
-        jblTiposNave.setFont(new java.awt.Font("Monospaced", 1, 14)); // NOI18N
-        jblTiposNave.setHorizontalAlignment(javax.swing.SwingConstants.LEFT);
-        jblTiposNave.setText("Tablero de: Jugador 2");
+        jblNombreJugador2.setFont(new java.awt.Font("Monospaced", 1, 14)); // NOI18N
+        jblNombreJugador2.setHorizontalAlignment(javax.swing.SwingConstants.LEFT);
+        jblNombreJugador2.setText("Tablero de: Jack Sparrow");
 
-        javax.swing.GroupLayout jPanelTiposNavesLayout = new javax.swing.GroupLayout(jPanelTiposNaves);
-        jPanelTiposNaves.setLayout(jPanelTiposNavesLayout);
-        jPanelTiposNavesLayout.setHorizontalGroup(
-            jPanelTiposNavesLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanelTiposNavesLayout.createSequentialGroup()
-                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                .addComponent(jblTiposNave, javax.swing.GroupLayout.PREFERRED_SIZE, 343, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addContainerGap(11, Short.MAX_VALUE))
+        javax.swing.GroupLayout jPanelNombreJugador2Layout = new javax.swing.GroupLayout(jPanelNombreJugador2);
+        jPanelNombreJugador2.setLayout(jPanelNombreJugador2Layout);
+        jPanelNombreJugador2Layout.setHorizontalGroup(
+            jPanelNombreJugador2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanelNombreJugador2Layout.createSequentialGroup()
+                .addContainerGap(11, Short.MAX_VALUE)
+                .addComponent(jblNombreJugador2, javax.swing.GroupLayout.PREFERRED_SIZE, 345, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addContainerGap(34, Short.MAX_VALUE))
         );
-        jPanelTiposNavesLayout.setVerticalGroup(
-            jPanelTiposNavesLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanelTiposNavesLayout.createSequentialGroup()
+        jPanelNombreJugador2Layout.setVerticalGroup(
+            jPanelNombreJugador2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanelNombreJugador2Layout.createSequentialGroup()
                 .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                .addComponent(jblTiposNave)
+                .addComponent(jblNombreJugador2)
                 .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
         );
 
-        jPanelFondo.add(jPanelTiposNaves);
-        jPanelTiposNaves.setBounds(500, 90, 360, 32);
+        jPanelFondo.add(jPanelNombreJugador2);
+        jPanelNombreJugador2.setBounds(540, 90, 390, 32);
 
         jPanelNombreJugador.setBackground(new java.awt.Color(255, 255, 255));
 
@@ -234,9 +232,9 @@ private void actualizarTurnoEnPantalla() {
         jPanelNombreJugadorLayout.setHorizontalGroup(
             jPanelNombreJugadorLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanelNombreJugadorLayout.createSequentialGroup()
-                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                .addContainerGap(7, Short.MAX_VALUE)
                 .addComponent(jblNombreJugador, javax.swing.GroupLayout.PREFERRED_SIZE, 345, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addContainerGap(9, Short.MAX_VALUE))
+                .addContainerGap(38, Short.MAX_VALUE))
         );
         jPanelNombreJugadorLayout.setVerticalGroup(
             jPanelNombreJugadorLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -247,7 +245,7 @@ private void actualizarTurnoEnPantalla() {
         );
 
         jPanelFondo.add(jPanelNombreJugador);
-        jPanelNombreJugador.setBounds(20, 90, 360, 32);
+        jPanelNombreJugador.setBounds(20, 90, 390, 32);
 
         jPanelDerechos.setBackground(new java.awt.Color(13, 26, 51));
 
@@ -282,7 +280,7 @@ private void actualizarTurnoEnPantalla() {
             }
         });
         jPanelFondo.add(btnAtacar);
-        btnAtacar.setBounds(520, 490, 120, 35);
+        btnAtacar.setBounds(550, 490, 120, 35);
 
         jblFondo.setFont(new java.awt.Font("Monospaced", 0, 18)); // NOI18N
         jPanelFondo.add(jblFondo);
@@ -319,12 +317,12 @@ private void actualizarTurnoEnPantalla() {
     private javax.swing.JPanel jPanelFondo;
     private javax.swing.JPanel jPanelHead;
     private javax.swing.JPanel jPanelNombreJugador;
-    private javax.swing.JPanel jPanelTiposNaves;
+    private javax.swing.JPanel jPanelNombreJugador2;
     private javax.swing.JLabel jblDerechos;
     private javax.swing.JLabel jblFondo;
     private javax.swing.JLabel jblNombreJugador;
+    private javax.swing.JLabel jblNombreJugador2;
     private javax.swing.JLabel jblTiempo;
-    private javax.swing.JLabel jblTiposNave;
     private javax.swing.JLabel jblTurno;
     // End of variables declaration//GEN-END:variables
 }

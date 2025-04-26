@@ -11,6 +11,7 @@ import negocio.Tablero;
  * @author ruben
  */
 public class JuegoDAO {
+    
     private static Tablero tableroJugador = new Tablero();
     private static Tablero tableroCPU = new Tablero();
 

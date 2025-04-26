@@ -77,7 +77,7 @@ public class PantallaAsignacion extends javax.swing.JFrame {
 
     private void crearTablero() {
         JPanel panelGrid = new JPanel(new java.awt.GridLayout(10, 10));
-        panelGrid.setBounds(100, 100, 400, 400);
+        panelGrid.setBounds(20, 170, 355, 325);
         panelGrid.setOpaque(false);
 
         for (int i = 0; i < 10; i++) {
@@ -95,7 +95,7 @@ public class PantallaAsignacion extends javax.swing.JFrame {
             }
         }
 
-        this.getContentPane().add(panelGrid);
+        this.add(panelGrid, 0);
     }
 
     private void personazilarBotones() {
@@ -149,11 +149,14 @@ public class PantallaAsignacion extends javax.swing.JFrame {
         jPanelFondo.setLayout(null);
 
         jPanelHead.setBackground(new java.awt.Color(13, 26, 51));
+        jPanelHead.setLayout(null);
 
         jblConfiguracion1.setFont(new java.awt.Font("Monospaced", 0, 22)); // NOI18N
         jblConfiguracion1.setForeground(new java.awt.Color(255, 255, 255));
         jblConfiguracion1.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
         jblConfiguracion1.setText("ID partida: 172.72.82...");
+        jPanelHead.add(jblConfiguracion1);
+        jblConfiguracion1.setBounds(235, 6, 412, 47);
 
         btnVolver.setBackground(new java.awt.Color(0, 166, 255));
         btnVolver.setFont(new java.awt.Font("Monospaced", 1, 18)); // NOI18N
@@ -163,36 +166,11 @@ public class PantallaAsignacion extends javax.swing.JFrame {
                 btnVolverMouseClicked(evt);
             }
         });
-
-        javax.swing.GroupLayout jPanelHeadLayout = new javax.swing.GroupLayout(jPanelHead);
-        jPanelHead.setLayout(jPanelHeadLayout);
-        jPanelHeadLayout.setHorizontalGroup(
-            jPanelHeadLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(jPanelHeadLayout.createSequentialGroup()
-                .addGap(21, 21, 21)
-                .addComponent(btnVolver, javax.swing.GroupLayout.PREFERRED_SIZE, 120, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addContainerGap(809, Short.MAX_VALUE))
-            .addGroup(jPanelHeadLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanelHeadLayout.createSequentialGroup()
-                    .addContainerGap(235, Short.MAX_VALUE)
-                    .addComponent(jblConfiguracion1, javax.swing.GroupLayout.PREFERRED_SIZE, 412, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addContainerGap(303, Short.MAX_VALUE)))
-        );
-        jPanelHeadLayout.setVerticalGroup(
-            jPanelHeadLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanelHeadLayout.createSequentialGroup()
-                .addContainerGap(19, Short.MAX_VALUE)
-                .addComponent(btnVolver, javax.swing.GroupLayout.PREFERRED_SIZE, 35, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addContainerGap())
-            .addGroup(jPanelHeadLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanelHeadLayout.createSequentialGroup()
-                    .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                    .addComponent(jblConfiguracion1, javax.swing.GroupLayout.PREFERRED_SIZE, 47, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addContainerGap(7, Short.MAX_VALUE)))
-        );
+        jPanelHead.add(btnVolver);
+        btnVolver.setBounds(21, 14, 120, 35);
 
         jPanelFondo.add(jPanelHead);
-        jPanelHead.setBounds(0, 0, 0, 0);
+        jPanelHead.setBounds(0, 0, 950, 60);
 
         jPanelTiposNaves.setBackground(new java.awt.Color(255, 255, 255));
 
