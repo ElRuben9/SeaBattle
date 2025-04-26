@@ -16,43 +16,63 @@ import javax.swing.*;
  *
  * @author ruben
  */
-public class PantallaJuego extends javax.swing.JFrame {
+public class PantallaAsignacion extends javax.swing.JFrame {
 
-    private Tablero tableroCPU;
+    private Tablero tableroJugador;
     private JButton[][] botonesTablero = new JButton[10][10];
-    String fondo = "recursos/interfaz/fondoColocarBarcos.png";
+    private String orientacionActual = "horizontal"; // horizontal por defecto
+    private TipoBarco tipoSeleccionado = TipoBarco.BARCO; // Tipo por defecto (puedes mejorarlo luego)
+    private ViewModels.AsignacionViewModel vmAsignacion;
+    private boolean esJugador1 = true; // Empezamos con jugador 1
+    private Tablero tableroJugador1;
+    private Tablero tableroJugador2;
+
+    String fondo = "recursos/interfaz/fondoPantallaPartida.png";
+
+    PantallaEscogerPartida escoger;
 
     /**
-     * Creates new form PantallaJuego
+     * Creates new form PantallaAsignacion
+     *
+     * @param escoger
      */
-    public PantallaJuego() {
+    public PantallaAsignacion(PantallaEscogerPartida escoger) {
         initComponents();
 
-        cargarInterfaz();
+        this.escoger = escoger;
 
+        cargarInterfaz();
     }
 
     private void cargarInterfaz() {
 
         PersonalizacionGeneral.colocarImagenLabel(jblFondo, fondo);
+        // PersonalizacionGeneral.imagenAJLabelMaxCalidad(jblIconApuntar, "recursos/iconos/apuntar.png");
 
         personazilarBotones();
-        tableroCPU = JuegoDAO.obtenerTableroCPU();
+        vmAsignacion = new ViewModels.AsignacionViewModel();
         crearTablero();
+
     }
 
-    private void personazilarBotones() {
+    private void colocarBarco(int x, int y) {
+        Barco barco = new Barco(tipoSeleccionado, 3, orientacionActual); // Ejemplo: tamaño 3
+        boolean colocado = tableroJugador.colocarBarco(barco, x, y);
 
-        btnAbandonar.setContentAreaFilled(false);
-        btnAbandonar.setBorderPainted(false);
-        btnAbandonar.setOpaque(false);
-        btnAbandonar.setUI(new BotonPersonalizado(25, new Color(0, 166, 255), new Color(82, 250, 255), 3));
-
-        btnAtacar.setContentAreaFilled(false);
-        btnAtacar.setBorderPainted(false);
-        btnAtacar.setOpaque(false);
-        btnAtacar.setUI(new BotonPersonalizado(25, new Color(0, 166, 255), new Color(82, 250, 255), 3));
-
+        if (colocado) {
+            // Pintar celdas
+            if (orientacionActual.equals("horizontal")) {
+                for (int i = 0; i < barco.getTamaño(); i++) {
+                    botonesTablero[x + i][y].setBackground(Color.GRAY);
+                }
+            } else {
+                for (int i = 0; i < barco.getTamaño(); i++) {
+                    botonesTablero[x][y + i].setBackground(Color.GRAY);
+                }
+            }
+        } else {
+            JOptionPane.showMessageDialog(this, "No se pudo colocar el barco aquí", "Error", JOptionPane.ERROR_MESSAGE);
+        }
     }
 
     private void crearTablero() {
@@ -63,12 +83,12 @@ public class PantallaJuego extends javax.swing.JFrame {
         for (int i = 0; i < 10; i++) {
             for (int j = 0; j < 10; j++) {
                 JButton boton = new JButton();
-                boton.setBackground(new Color(173, 216, 230)); 
+                boton.setBackground(new Color(173, 216, 230));
                 boton.setFocusPainted(false);
                 int x = i;
                 int y = j;
 
-                boton.addActionListener(e -> disparar(x, y));
+                boton.addActionListener(e -> colocarBarco(x, y));
 
                 botonesTablero[i][j] = boton;
                 panelGrid.add(boton);
@@ -78,21 +98,23 @@ public class PantallaJuego extends javax.swing.JFrame {
         this.getContentPane().add(panelGrid);
     }
 
-    private void disparar(int x, int y) {
-        boolean impacto = tableroCPU.realizarDisparo(x, y);
+    private void personazilarBotones() {
 
-        if (impacto) {
-            botonesTablero[x][y].setBackground(Color.RED);
-        } else {
-            botonesTablero[x][y].setBackground(Color.WHITE);
-        }
+        btnConfirmar.setContentAreaFilled(false);
+        btnConfirmar.setBorderPainted(false);
+        btnConfirmar.setOpaque(false);
+        btnConfirmar.setUI(new BotonPersonalizado(25, new Color(21, 255, 0), new Color(21, 255, 168), 3));
 
-        botonesTablero[x][y].setEnabled(false); // No volver a disparar ahí
+        btnVolver.setContentAreaFilled(false);
+        btnVolver.setBorderPainted(false);
+        btnVolver.setOpaque(false);
+        btnVolver.setUI(new BotonPersonalizado(25, new Color(0, 166, 255), new Color(82, 250, 255), 3));
 
-        if (tableroCPU.verificarGanador()) {
-            JOptionPane.showMessageDialog(this, "¡Ganaste!", "Victoria", JOptionPane.INFORMATION_MESSAGE);
+        btnGirar.setContentAreaFilled(false);
+        btnGirar.setBorderPainted(false);
+        btnGirar.setOpaque(false);
+        btnGirar.setUI(new BotonPersonalizado(25, new Color(0, 166, 255), new Color(82, 250, 255), 3));
 
-        }
     }
 
     /**
@@ -106,42 +128,41 @@ public class PantallaJuego extends javax.swing.JFrame {
 
         jPanelFondo = new javax.swing.JPanel();
         jPanelHead = new javax.swing.JPanel();
-        jblTurno = new javax.swing.JLabel();
-        btnAbandonar = new javax.swing.JButton();
-        jblTiempo = new javax.swing.JLabel();
+        jblConfiguracion1 = new javax.swing.JLabel();
+        btnVolver = new javax.swing.JButton();
         jPanelTiposNaves = new PanelTransparente((float) 0.35);
         jblTiposNave = new javax.swing.JLabel();
         jPanelNombreJugador = new PanelTransparente((float) 0.35);
         jblNombreJugador = new javax.swing.JLabel();
+        jPanelEsperando = new PanelTransparente((float) 0.35);
+        jblEsperando = new javax.swing.JLabel();
         jPanelDerechos = new javax.swing.JPanel();
         jblDerechos = new javax.swing.JLabel();
-        btnAtacar = new javax.swing.JButton();
+        jblIconApuntar = new javax.swing.JLabel();
+        btnConfirmar = new javax.swing.JButton();
+        btnGirar = new javax.swing.JButton();
         jblFondo = new javax.swing.JLabel();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
+        setTitle("Asignar Barcos");
 
         jPanelFondo.setLayout(null);
 
         jPanelHead.setBackground(new java.awt.Color(13, 26, 51));
 
-        jblTurno.setFont(new java.awt.Font("Monospaced", 0, 22)); // NOI18N
-        jblTurno.setForeground(new java.awt.Color(255, 255, 255));
-        jblTurno.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
-        jblTurno.setText("Turno: Jack Sparrow");
+        jblConfiguracion1.setFont(new java.awt.Font("Monospaced", 0, 22)); // NOI18N
+        jblConfiguracion1.setForeground(new java.awt.Color(255, 255, 255));
+        jblConfiguracion1.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
+        jblConfiguracion1.setText("ID partida: 172.72.82...");
 
-        btnAbandonar.setBackground(new java.awt.Color(0, 166, 255));
-        btnAbandonar.setFont(new java.awt.Font("Monospaced", 1, 18)); // NOI18N
-        btnAbandonar.setText("Abandonar");
-        btnAbandonar.addMouseListener(new java.awt.event.MouseAdapter() {
+        btnVolver.setBackground(new java.awt.Color(0, 166, 255));
+        btnVolver.setFont(new java.awt.Font("Monospaced", 1, 18)); // NOI18N
+        btnVolver.setText("Volver");
+        btnVolver.addMouseListener(new java.awt.event.MouseAdapter() {
             public void mouseClicked(java.awt.event.MouseEvent evt) {
-                btnAbandonarMouseClicked(evt);
+                btnVolverMouseClicked(evt);
             }
         });
-
-        jblTiempo.setFont(new java.awt.Font("Monospaced", 1, 28)); // NOI18N
-        jblTiempo.setForeground(new java.awt.Color(255, 255, 255));
-        jblTiempo.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
-        jblTiempo.setText("30");
 
         javax.swing.GroupLayout jPanelHeadLayout = new javax.swing.GroupLayout(jPanelHead);
         jPanelHead.setLayout(jPanelHeadLayout);
@@ -149,35 +170,25 @@ public class PantallaJuego extends javax.swing.JFrame {
             jPanelHeadLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(jPanelHeadLayout.createSequentialGroup()
                 .addGap(21, 21, 21)
-                .addComponent(btnAbandonar, javax.swing.GroupLayout.PREFERRED_SIZE, 142, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addContainerGap(787, Short.MAX_VALUE))
+                .addComponent(btnVolver, javax.swing.GroupLayout.PREFERRED_SIZE, 120, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addContainerGap(809, Short.MAX_VALUE))
             .addGroup(jPanelHeadLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                 .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanelHeadLayout.createSequentialGroup()
                     .addContainerGap(235, Short.MAX_VALUE)
-                    .addComponent(jblTurno, javax.swing.GroupLayout.PREFERRED_SIZE, 412, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(jblConfiguracion1, javax.swing.GroupLayout.PREFERRED_SIZE, 412, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addContainerGap(303, Short.MAX_VALUE)))
-            .addGroup(jPanelHeadLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                .addGroup(jPanelHeadLayout.createSequentialGroup()
-                    .addGap(857, 857, 857)
-                    .addComponent(jblTiempo, javax.swing.GroupLayout.PREFERRED_SIZE, 75, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addContainerGap(18, Short.MAX_VALUE)))
         );
         jPanelHeadLayout.setVerticalGroup(
             jPanelHeadLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanelHeadLayout.createSequentialGroup()
                 .addContainerGap(19, Short.MAX_VALUE)
-                .addComponent(btnAbandonar, javax.swing.GroupLayout.PREFERRED_SIZE, 35, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addComponent(btnVolver, javax.swing.GroupLayout.PREFERRED_SIZE, 35, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addContainerGap())
             .addGroup(jPanelHeadLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                 .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanelHeadLayout.createSequentialGroup()
                     .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                    .addComponent(jblTurno, javax.swing.GroupLayout.PREFERRED_SIZE, 47, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(jblConfiguracion1, javax.swing.GroupLayout.PREFERRED_SIZE, 47, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addContainerGap(7, Short.MAX_VALUE)))
-            .addGroup(jPanelHeadLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanelHeadLayout.createSequentialGroup()
-                    .addContainerGap(7, Short.MAX_VALUE)
-                    .addComponent(jblTiempo, javax.swing.GroupLayout.PREFERRED_SIZE, 47, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addContainerGap()))
         );
 
         jPanelFondo.add(jPanelHead);
@@ -187,7 +198,7 @@ public class PantallaJuego extends javax.swing.JFrame {
 
         jblTiposNave.setFont(new java.awt.Font("Monospaced", 1, 14)); // NOI18N
         jblTiposNave.setHorizontalAlignment(javax.swing.SwingConstants.LEFT);
-        jblTiposNave.setText("Tablero de: Jugador 2");
+        jblTiposNave.setText("Tipos de nave");
 
         javax.swing.GroupLayout jPanelTiposNavesLayout = new javax.swing.GroupLayout(jPanelTiposNaves);
         jPanelTiposNaves.setLayout(jPanelTiposNavesLayout);
@@ -207,7 +218,7 @@ public class PantallaJuego extends javax.swing.JFrame {
         );
 
         jPanelFondo.add(jPanelTiposNaves);
-        jPanelTiposNaves.setBounds(500, 90, 360, 32);
+        jPanelTiposNaves.setBounds(500, 130, 360, 32);
 
         jPanelNombreJugador.setBackground(new java.awt.Color(255, 255, 255));
 
@@ -233,7 +244,33 @@ public class PantallaJuego extends javax.swing.JFrame {
         );
 
         jPanelFondo.add(jPanelNombreJugador);
-        jPanelNombreJugador.setBounds(20, 90, 360, 32);
+        jPanelNombreJugador.setBounds(20, 130, 360, 32);
+
+        jPanelEsperando.setBackground(new java.awt.Color(255, 255, 255));
+
+        jblEsperando.setFont(new java.awt.Font("Monospaced", 1, 22)); // NOI18N
+        jblEsperando.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
+        jblEsperando.setText("Esperando Jugadores");
+
+        javax.swing.GroupLayout jPanelEsperandoLayout = new javax.swing.GroupLayout(jPanelEsperando);
+        jPanelEsperando.setLayout(jPanelEsperandoLayout);
+        jPanelEsperandoLayout.setHorizontalGroup(
+            jPanelEsperandoLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanelEsperandoLayout.createSequentialGroup()
+                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                .addComponent(jblEsperando, javax.swing.GroupLayout.PREFERRED_SIZE, 346, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addContainerGap(8, Short.MAX_VALUE))
+        );
+        jPanelEsperandoLayout.setVerticalGroup(
+            jPanelEsperandoLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanelEsperandoLayout.createSequentialGroup()
+                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                .addComponent(jblEsperando, javax.swing.GroupLayout.PREFERRED_SIZE, 39, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+        );
+
+        jPanelFondo.add(jPanelEsperando);
+        jPanelEsperando.setBounds(510, 470, 360, 50);
 
         jPanelDerechos.setBackground(new java.awt.Color(13, 26, 51));
 
@@ -259,16 +296,33 @@ public class PantallaJuego extends javax.swing.JFrame {
         jPanelFondo.add(jPanelDerechos);
         jPanelDerechos.setBounds(0, 550, 950, 50);
 
-        btnAtacar.setBackground(new java.awt.Color(0, 166, 255));
-        btnAtacar.setFont(new java.awt.Font("Monospaced", 1, 18)); // NOI18N
-        btnAtacar.setText("Atacar");
-        btnAtacar.addMouseListener(new java.awt.event.MouseAdapter() {
+        jblIconApuntar.setText("jLabel1");
+        jPanelFondo.add(jblIconApuntar);
+        jblIconApuntar.setBounds(515, 420, 32, 32);
+
+        btnConfirmar.setBackground(new java.awt.Color(0, 166, 255));
+        btnConfirmar.setFont(new java.awt.Font("Monospaced", 1, 14)); // NOI18N
+        btnConfirmar.setText("Confirmar");
+        btnConfirmar.setHorizontalTextPosition(javax.swing.SwingConstants.LEADING);
+        btnConfirmar.addMouseListener(new java.awt.event.MouseAdapter() {
             public void mouseClicked(java.awt.event.MouseEvent evt) {
-                btnAtacarMouseClicked(evt);
+                btnConfirmarMouseClicked(evt);
             }
         });
-        jPanelFondo.add(btnAtacar);
-        btnAtacar.setBounds(520, 490, 120, 35);
+        jPanelFondo.add(btnConfirmar);
+        btnConfirmar.setBounds(750, 415, 120, 40);
+
+        btnGirar.setBackground(new java.awt.Color(0, 166, 255));
+        btnGirar.setFont(new java.awt.Font("Monospaced", 1, 18)); // NOI18N
+        btnGirar.setText("Girar");
+        btnGirar.setHorizontalTextPosition(javax.swing.SwingConstants.LEFT);
+        btnGirar.addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mouseClicked(java.awt.event.MouseEvent evt) {
+                btnGirarMouseClicked(evt);
+            }
+        });
+        jPanelFondo.add(btnGirar);
+        btnGirar.setBounds(510, 415, 120, 40);
 
         jblFondo.setFont(new java.awt.Font("Monospaced", 0, 18)); // NOI18N
         jPanelFondo.add(jblFondo);
@@ -289,62 +343,65 @@ public class PantallaJuego extends javax.swing.JFrame {
         setLocationRelativeTo(null);
     }// </editor-fold>//GEN-END:initComponents
 
-    private void btnAbandonarMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_btnAbandonarMouseClicked
-        // TODO add your handling code here:
-    }//GEN-LAST:event_btnAbandonarMouseClicked
-
-    private void btnAtacarMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_btnAtacarMouseClicked
-        // TODO add your handling code here:
-    }//GEN-LAST:event_btnAtacarMouseClicked
-
-    /**
-     * @param args the command line arguments
-     */
-    public static void main(String args[]) {
-        /* Set the Nimbus look and feel */
-        //<editor-fold defaultstate="collapsed" desc=" Look and feel setting code (optional) ">
-        /* If Nimbus (introduced in Java SE 6) is not available, stay with the default look and feel.
-         * For details see http://download.oracle.com/javase/tutorial/uiswing/lookandfeel/plaf.html 
-         */
-        try {
-            for (javax.swing.UIManager.LookAndFeelInfo info : javax.swing.UIManager.getInstalledLookAndFeels()) {
-                if ("Nimbus".equals(info.getName())) {
-                    javax.swing.UIManager.setLookAndFeel(info.getClassName());
-                    break;
-                }
-            }
-        } catch (ClassNotFoundException ex) {
-            java.util.logging.Logger.getLogger(PantallaJuego.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
-        } catch (InstantiationException ex) {
-            java.util.logging.Logger.getLogger(PantallaJuego.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
-        } catch (IllegalAccessException ex) {
-            java.util.logging.Logger.getLogger(PantallaJuego.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
-        } catch (javax.swing.UnsupportedLookAndFeelException ex) {
-            java.util.logging.Logger.getLogger(PantallaJuego.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
+    private void btnConfirmarMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_btnConfirmarMouseClicked
+        if (esJugador1) {
+            tableroJugador1 = vmAsignacion.getTablero(); // Guarda el tablero de jugador 1
+            esJugador1 = false; // Cambia al jugador 2
+            vmAsignacion = new ViewModels.AsignacionViewModel(); // Nuevo tablero para jugador 2
+            limpiarTableroGUI();
+            JOptionPane.showMessageDialog(this, "Turno del Jugador 2: Coloca tus barcos.");
+        } else {
+            tableroJugador2 = vmAsignacion.getTablero(); // Guarda el tablero de jugador 2
+            abrirPantallaJuego(); // Iniciar la partida
         }
-        //</editor-fold>
-
-        /* Create and display the form */
-        java.awt.EventQueue.invokeLater(new Runnable() {
-            public void run() {
-                new PantallaJuego().setVisible(true);
+    }//GEN-LAST:event_btnConfirmarMouseClicked
+    private void limpiarTableroGUI() {
+        for (int i = 0; i < 10; i++) {
+            for (int j = 0; j < 10; j++) {
+                botonesTablero[i][j].setBackground(new Color(173, 216, 230)); // Azul claro
+                botonesTablero[i][j].setEnabled(true);
             }
-        });
+        }
     }
 
+    private void abrirPantallaJuego() {
+        PantallaJuego juego = new PantallaJuego(tableroJugador1, tableroJugador2);
+        juego.setVisible(true);
+        this.dispose();
+    }
+
+
+    private void btnGirarMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_btnGirarMouseClicked
+        if (orientacionActual.equals("horizontal")) {
+            orientacionActual = "vertical";
+        } else {
+            orientacionActual = "horizontal";
+        }
+    }//GEN-LAST:event_btnGirarMouseClicked
+
+    private void btnVolverMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_btnVolverMouseClicked
+        // TODO add your handling code here:
+        escoger.setVisible(true);
+        this.dispose();
+    }//GEN-LAST:event_btnVolverMouseClicked
+
+
     // Variables declaration - do not modify//GEN-BEGIN:variables
-    private javax.swing.JButton btnAbandonar;
-    private javax.swing.JButton btnAtacar;
+    private javax.swing.JButton btnConfirmar;
+    private javax.swing.JButton btnGirar;
+    private javax.swing.JButton btnVolver;
     private javax.swing.JPanel jPanelDerechos;
+    private javax.swing.JPanel jPanelEsperando;
     private javax.swing.JPanel jPanelFondo;
     private javax.swing.JPanel jPanelHead;
     private javax.swing.JPanel jPanelNombreJugador;
     private javax.swing.JPanel jPanelTiposNaves;
+    private javax.swing.JLabel jblConfiguracion1;
     private javax.swing.JLabel jblDerechos;
+    private javax.swing.JLabel jblEsperando;
     private javax.swing.JLabel jblFondo;
+    private javax.swing.JLabel jblIconApuntar;
     private javax.swing.JLabel jblNombreJugador;
-    private javax.swing.JLabel jblTiempo;
     private javax.swing.JLabel jblTiposNave;
-    private javax.swing.JLabel jblTurno;
     // End of variables declaration//GEN-END:variables
 }
