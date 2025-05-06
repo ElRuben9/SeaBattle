@@ -10,6 +10,8 @@ import utilerias.PanelTransparente;
 import utilerias.PersonalizacionGeneral;
 import negocio.*;
 import DAOs.JuegoDAO;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 import java.util.HashMap;
 import java.util.Map;
 import javax.swing.*;
@@ -87,17 +89,55 @@ public class PantallaAsignacion extends javax.swing.JFrame {
         personazilarBotones();
         vmAsignacion = new ViewModels.AsignacionViewModel();
         crearTablero();
-btnConfirmar.setEnabled(false);
+        btnConfirmar.setEnabled(false);
+        btnConfirmar.setVisible(false);
 
     }
 
     private void colocarBarco(int x, int y) {
+        
+        if(tipoSeleccionado.equals(TipoBarco.BARCO) && colocados.get(TipoBarco.BARCO) == 4){
+            System.out.println(colocados.get(TipoBarco.BARCO));
+            JOptionPane.showMessageDialog(this, "Maximo numero de barcos alcanzado.", "Error", JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+        
+        if(tipoSeleccionado.equals(TipoBarco.CRUCERO) && colocados.get(TipoBarco.CRUCERO) == 3){
+            JOptionPane.showMessageDialog(this, "Maximo numero de cruceros alcanzado.", "Error", JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+                
+        if(tipoSeleccionado.equals(TipoBarco.SUBMARINO) && colocados.get(TipoBarco.SUBMARINO) == 2){
+            JOptionPane.showMessageDialog(this, "Maximo numero de submarinos alcanzado.", "Error", JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+        
+        if(tipoSeleccionado.equals(TipoBarco.PORTAAVIONES) && colocados.get(TipoBarco.PORTAAVIONES) == 1){
+            JOptionPane.showMessageDialog(this, "Maximo numero de portaviones alcanzado.", "Error", JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+        
+        
+        
+        
         if (orientacionActual.equals("horizontal") && x + barcoActual.getTamaño() > 10) {
             JOptionPane.showMessageDialog(this, "El barco no cabe aquí.", "Error", JOptionPane.ERROR_MESSAGE);
             return;
         } else if (orientacionActual.equals("vertical") && y + barcoActual.getTamaño() > 10) {
             JOptionPane.showMessageDialog(this, "El barco no cabe aquí.", "Error", JOptionPane.ERROR_MESSAGE);
             return;
+        }
+        
+        for(int i = 0; i < barcoActual.getTamaño(); i++){
+            if(orientacionActual.equals("horizontal") && botonesTablero[x + i][y].getBackground().equals(Color.GRAY)){
+                JOptionPane.showMessageDialog(this, "El espacio ya esta ocupado", "Error", JOptionPane.ERROR_MESSAGE);
+                return;
+            }
+            
+            if(orientacionActual.equals("vertical") && botonesTablero[x][y + i].getBackground().equals(Color.GRAY)){
+                JOptionPane.showMessageDialog(this, "El espacio ya esta ocupado", "Error", JOptionPane.ERROR_MESSAGE);
+                return;
+            }
         }
 
         // Si el barco cabe, lo colocamos
@@ -124,7 +164,7 @@ btnConfirmar.setEnabled(false);
                 .allMatch(entry -> entry.getValue().equals(maximos.get(entry.getKey())));
 
         btnConfirmar.setEnabled(todosListos);  // Habilita el botón solo si todo está listo
-
+        btnConfirmar.setVisible(todosListos);
     }
 
     // Suponiendo que ya tienes los objetos barcoActual y tableroJugador
@@ -151,6 +191,78 @@ btnConfirmar.setEnabled(false);
                         System.out.println("No se ha seleccionado un barco.");
                     }
                 });
+                
+                        // Listener para cambiar color al pasar el mouse
+                boton.addMouseListener(new MouseAdapter() {
+            public void mouseEntered(MouseEvent e) {
+                if (barcoActual != null){
+                    
+                    if (orientacionActual.equals("horizontal") && x + barcoActual.getTamaño() > 10) {
+                        return;
+                    } else if (orientacionActual.equals("vertical") && y + barcoActual.getTamaño() > 10) {
+                        return;
+                }
+                    
+                    for (int i = 0; i < barcoActual.getTamaño(); i++) {
+                        try{    
+                            if (orientacionActual.equals("horizontal")) {
+                                if(botonesTablero[x + i][y].getBackground().equals(Color.GRAY)){
+                                    return;
+                                }
+                                botonesTablero[x + i][y].setBackground(Color.LIGHT_GRAY);
+
+                            } else {
+                                if(botonesTablero[x][y + i].getBackground().equals(Color.GRAY)){
+                                    return;
+                                }
+                                botonesTablero[x][y + i].setBackground(Color.LIGHT_GRAY);
+                            }
+                            }
+                        catch(Exception ex){
+
+                            botonesTablero[x + i][y].setBackground(new Color(173, 216, 230));
+                        }
+            }
+                }
+            }
+
+            public void mouseExited(MouseEvent e) {
+                
+                 if (barcoActual != null){
+                     
+                    if (orientacionActual.equals("horizontal") && x + barcoActual.getTamaño() > 10) {
+                        return;
+                } else if (orientacionActual.equals("vertical") && y + barcoActual.getTamaño() > 10) {
+                        return;
+                }
+                     
+                     
+                     
+                    for (int i = 0; i < barcoActual.getTamaño(); i++) {
+                        try{    
+                            if (orientacionActual.equals("horizontal")) {
+                                if(botonesTablero[x + i][y].getBackground().equals(Color.GRAY)){
+                                    return;
+                                }
+                                botonesTablero[x + i][y].setBackground(new Color(173, 216, 230));
+
+                            } else {
+                                if(botonesTablero[x][y + i].getBackground().equals(Color.GRAY)){
+                                    return;
+                                }
+                                botonesTablero[x][y + i].setBackground(new Color(173, 216, 230));
+                            }
+                            }
+                        catch(Exception ex){
+                            botonesTablero[x + i][y].setBackground(new Color(173, 216, 230));
+                        }
+                    }
+                        }
+                }
+
+        });
+                
+                
                 panelListaBarcos.add(boton); // Ese es el panel donde dice "Tipos de nave"
                 botonesTablero[i][j] = boton;
                 panelGrid.add(boton);
@@ -200,10 +312,8 @@ btnConfirmar.setEnabled(false);
         jblEsperando = new javax.swing.JLabel();
         jPanelDerechos = new javax.swing.JPanel();
         jblDerechos = new javax.swing.JLabel();
-        jblIconApuntar = new javax.swing.JLabel();
         btnConfirmar = new javax.swing.JButton();
         btnGirar = new javax.swing.JButton();
-        jblFondo = new javax.swing.JLabel();
         panelListaBarcos = new javax.swing.JPanel();
         txtPortaAviones = new javax.swing.JLabel();
         txtContadorPortaAviones = new javax.swing.JLabel();
@@ -217,6 +327,7 @@ btnConfirmar.setEnabled(false);
         seleccionarSubmarino = new javax.swing.JButton();
         seleccionarBarco = new javax.swing.JButton();
         seleccionarCrucero = new javax.swing.JButton();
+        jblFondo = new javax.swing.JLabel();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
         setTitle("Asignar Barcos");
@@ -349,10 +460,6 @@ btnConfirmar.setEnabled(false);
         jPanelFondo.add(jPanelDerechos);
         jPanelDerechos.setBounds(0, 550, 950, 50);
 
-        jblIconApuntar.setText("jLabel1");
-        jPanelFondo.add(jblIconApuntar);
-        jblIconApuntar.setBounds(515, 420, 32, 32);
-
         btnConfirmar.setBackground(new java.awt.Color(0, 166, 255));
         btnConfirmar.setFont(new java.awt.Font("Monospaced", 1, 14)); // NOI18N
         btnConfirmar.setText("Confirmar");
@@ -366,8 +473,8 @@ btnConfirmar.setEnabled(false);
         btnConfirmar.setBounds(750, 415, 120, 40);
 
         btnGirar.setBackground(new java.awt.Color(0, 166, 255));
-        btnGirar.setFont(new java.awt.Font("Monospaced", 1, 18)); // NOI18N
-        btnGirar.setText("Girar");
+        btnGirar.setFont(new java.awt.Font("Monospaced", 1, 14)); // NOI18N
+        btnGirar.setText("Vertical");
         btnGirar.setHorizontalTextPosition(javax.swing.SwingConstants.LEFT);
         btnGirar.addMouseListener(new java.awt.event.MouseAdapter() {
             public void mouseClicked(java.awt.event.MouseEvent evt) {
@@ -376,10 +483,6 @@ btnConfirmar.setEnabled(false);
         });
         jPanelFondo.add(btnGirar);
         btnGirar.setBounds(510, 415, 120, 40);
-
-        jblFondo.setFont(new java.awt.Font("Monospaced", 0, 18)); // NOI18N
-        jPanelFondo.add(jblFondo);
-        jblFondo.setBounds(0, 0, 950, 550);
 
         txtPortaAviones.setText("Porta Aviones");
 
@@ -391,7 +494,7 @@ btnConfirmar.setEnabled(false);
 
         txtBarco.setText("Barco");
 
-        txtContadorBarco.setText("0x");
+        txtContadorBarco.setText("0/4");
 
         txtCrucero.setText("Crucero");
 
@@ -559,6 +662,10 @@ btnConfirmar.setEnabled(false);
         jPanelFondo.add(panelListaBarcos);
         panelListaBarcos.setBounds(500, 170, 350, 190);
 
+        jblFondo.setFont(new java.awt.Font("Monospaced", 0, 18)); // NOI18N
+        jPanelFondo.add(jblFondo);
+        jblFondo.setBounds(0, 0, 950, 550);
+
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
         getContentPane().setLayout(layout);
         layout.setHorizontalGroup(
@@ -616,9 +723,11 @@ btnConfirmar.setEnabled(false);
         if (orientacionActual.equals("horizontal")) {
             orientacionActual = "vertical";
             btnGirar.setBackground(Color.RED);
+            btnGirar.setText("Horizontal");
         } else {
             orientacionActual = "horizontal";
             btnGirar.setBackground(Color.GREEN);
+            btnGirar.setText("Vertical");
         }
     }//GEN-LAST:event_btnGirarMouseClicked
 
@@ -662,6 +771,10 @@ btnConfirmar.setEnabled(false);
         } else {
             JOptionPane.showMessageDialog(this, "Ya colocaste todos los Cruceros.");
         }
+        
+        
+        
+        
     }//GEN-LAST:event_seleccionarCruceroActionPerformed
 
 
@@ -679,7 +792,6 @@ btnConfirmar.setEnabled(false);
     private javax.swing.JLabel jblDerechos;
     private javax.swing.JLabel jblEsperando;
     private javax.swing.JLabel jblFondo;
-    private javax.swing.JLabel jblIconApuntar;
     private javax.swing.JLabel jblNombreJugador;
     private javax.swing.JLabel jblTiposNave;
     private javax.swing.JPanel panelListaBarcos;
