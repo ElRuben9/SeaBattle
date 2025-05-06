@@ -13,12 +13,12 @@ import negocio.*;
 
 public class AsignacionViewModel {
     private Tablero tableroJugador;
-
+    private Orientacion orientacion;
     public AsignacionViewModel() {
         tableroJugador = new Tablero();
     }
 
-    public boolean colocarBarco(TipoBarco tipo, int tamaño, int x, int y, String orientacion) {
+    public boolean colocarBarco(TipoBarco tipo, int tamaño, int x, int y, Orientacion orientacion) {
         Barco barco = new Barco(tipo, tamaño, orientacion);
         return tableroJugador.colocarBarco(barco, x, y);
     }

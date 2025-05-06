@@ -8,10 +8,6 @@ package negocio;
  *
  * @author ruben
  */
-public enum EstadoCelda {
-    AGUA,      
-    BARCO,     
-    IMPACTO,  
-    FALLO,   
-    HUNDIDO    
+public enum Orientacion {
+    HORIZONTAL, VERTICAL
 }

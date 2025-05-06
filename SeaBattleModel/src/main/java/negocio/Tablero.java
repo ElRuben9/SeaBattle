@@ -9,6 +9,7 @@ package negocio;
  * @author ruben
  */
 public class Tablero {
+
     private Celda[][] celdas;
 
     public Tablero() {
@@ -21,28 +22,36 @@ public class Tablero {
     }
 
     public boolean colocarBarco(Barco barco, int x, int y) {
-        String orientacion = barco.getOrientacion();
-
-        if (orientacion.equalsIgnoreCase("horizontal")) {
-            if (x + barco.getTamaño() > 10) return false;
-            for (int i = 0; i < barco.getTamaño(); i++) {
-                if (celdas[x + i][y].tieneBarco()) return false;
-            }
-            for (int i = 0; i < barco.getTamaño(); i++) {
-                celdas[x + i][y].asignarBarco(barco);
-            }
-        } else if (orientacion.equalsIgnoreCase("vertical")) {
-            if (y + barco.getTamaño() > 10) return false;
-            for (int i = 0; i < barco.getTamaño(); i++) {
-                if (celdas[x][y + i].tieneBarco()) return false;
-            }
-            for (int i = 0; i < barco.getTamaño(); i++) {
-                celdas[x][y + i].asignarBarco(barco);
+ 
+    Orientacion orientacion = barco.getOrientacion();
+    if (orientacion == Orientacion.HORIZONTAL) {
+        if (y + barco.getTamaño() > 10) {
+            return false; 
+        }
+        for (int i = 0; i < barco.getTamaño(); i++) {
+            if (celdas[x][y + i].tieneBarco()) {
+                return false; // Hay un barco en esta posición
             }
         }
-
-        return true;
+        for (int i = 0; i < barco.getTamaño(); i++) {
+            celdas[x][y + i].asignarBarco(barco); // Coloca el barco
+        }
+    } else if (orientacion == Orientacion.VERTICAL) {
+        if (x + barco.getTamaño() > 10) {
+            return false; // El barco no cabe
+        }
+        for (int i = 0; i < barco.getTamaño(); i++) {
+            if (celdas[x + i][y].tieneBarco()) {
+                return false; // Hay un barco en esta posición
+            }
+        }
+        for (int i = 0; i < barco.getTamaño(); i++) {
+            celdas[x + i][y].asignarBarco(barco); // Coloca el barco
+        }
     }
+
+    return true;
+}
 
     public boolean realizarDisparo(int x, int y) {
         return celdas[x][y].disparar();

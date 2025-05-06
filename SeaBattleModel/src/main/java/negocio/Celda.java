@@ -29,20 +29,26 @@ public class Celda {
         this.estado = EstadoCelda.BARCO;
     }
 
-    public boolean disparar() {
-        if (barco != null) {
-            estado = EstadoCelda.IMPACTO;
-            barco.tocar();
-            return true;
-        } else {
-            estado = EstadoCelda.FALLO;
-            return false;
-        }
+   public boolean disparar() {
+    if (estado == EstadoCelda.IMPACTO || estado == EstadoCelda.FALLO) {
+        return false; 
     }
 
-    public boolean fueImpactado() {
-        return estado == EstadoCelda.IMPACTO;
+    if (barco != null) {
+        estado = EstadoCelda.IMPACTO;
+        barco.tocar();
+        return true;
+    } else {
+        estado = EstadoCelda.FALLO;
+        return false;
     }
+}
+
+
+   public boolean fueImpactado() {
+    return estado == EstadoCelda.IMPACTO || estado == EstadoCelda.FALLO;
+}
+
 
     public EstadoCelda getEstado() {
         return estado;

@@ -33,13 +33,16 @@ public class JuegoViewModel {
         turnoJugador1 = !turnoJugador1;
     }
 
-    public boolean verificarGanador() {
-        if (turnoJugador1) {
-            return tableroJugador2.verificarGanador(); // Jugador 1 verifica si ganó
-        } else {
-            return tableroJugador1.verificarGanador(); // Jugador 2 verifica si ganó
-        }
-    }
+   public boolean hayGanador() {
+    return tableroJugador1.verificarGanador() || tableroJugador2.verificarGanador();
+}
+
+public String obtenerGanador() {
+    if (tableroJugador2.verificarGanador()) return "Jugador 1";
+    if (tableroJugador1.verificarGanador()) return "Jugador 2";
+    return null;
+}
+
 
     public boolean esTurnoJugador1() {
         return turnoJugador1;

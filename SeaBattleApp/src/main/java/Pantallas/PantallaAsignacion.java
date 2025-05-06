@@ -10,6 +10,8 @@ import utilerias.PanelTransparente;
 import utilerias.PersonalizacionGeneral;
 import negocio.*;
 import DAOs.JuegoDAO;
+import java.util.HashMap;
+import java.util.Map;
 import javax.swing.*;
 
 /**
@@ -26,10 +28,19 @@ public class PantallaAsignacion extends javax.swing.JFrame {
     private boolean esJugador1 = true; // Empezamos con jugador 1
     private Tablero tableroJugador1;
     private Tablero tableroJugador2;
-
+    private Barco barcoActual;
     String fondo = "recursos/interfaz/fondoPantallaPartida.png";
-
+    private Orientacion orientacion;
     PantallaEscogerPartida escoger;
+
+    private final Map<TipoBarco, Integer> maximos = Map.of(
+            TipoBarco.BARCO, 4, // Lancha
+            TipoBarco.CRUCERO, 3, // Destructor
+            TipoBarco.SUBMARINO, 2,
+            TipoBarco.PORTAAVIONES, 1
+    );
+
+    private final Map<TipoBarco, Integer> colocados = new HashMap<>();
 
     /**
      * Creates new form PantallaAsignacion
@@ -42,6 +53,30 @@ public class PantallaAsignacion extends javax.swing.JFrame {
         this.escoger = escoger;
 
         cargarInterfaz();
+        tableroJugador = new Tablero();
+        for (TipoBarco tipo : TipoBarco.values()) {
+            colocados.put(tipo, 0); // Todos inician con 0 colocados
+        }
+        actualizarContadores();
+        for (TipoBarco tipo : TipoBarco.values()) {
+            JButton btnTipo = new JButton(tipo.name()); // Puedes personalizar el nombre con .toString() si prefieres
+            btnTipo.addActionListener(e -> {
+                if (colocados.get(tipo) < maximos.get(tipo)) {
+                    tipoSeleccionado = tipo;
+                    barcoActual = new Barco(tipo);
+                } else {
+                    JOptionPane.showMessageDialog(this, "Ya colocaste todos los " + tipo.name().toLowerCase());
+                }
+            });
+        }
+
+    }
+
+    private void actualizarContadores() {
+        txtContadorBarco.setText(colocados.get(TipoBarco.BARCO) + "/" + maximos.get(TipoBarco.BARCO));
+        txtContadorCrucero.setText(colocados.get(TipoBarco.CRUCERO) + "/" + maximos.get(TipoBarco.CRUCERO));
+        txtContadorSubmarino.setText(colocados.get(TipoBarco.SUBMARINO) + "/" + maximos.get(TipoBarco.SUBMARINO));
+        txtContadorPortaAviones.setText(colocados.get(TipoBarco.PORTAAVIONES) + "/" + maximos.get(TipoBarco.PORTAAVIONES));
     }
 
     private void cargarInterfaz() {
@@ -52,29 +87,47 @@ public class PantallaAsignacion extends javax.swing.JFrame {
         personazilarBotones();
         vmAsignacion = new ViewModels.AsignacionViewModel();
         crearTablero();
+btnConfirmar.setEnabled(false);
 
     }
 
     private void colocarBarco(int x, int y) {
-        Barco barco = new Barco(tipoSeleccionado, 3, orientacionActual); // Ejemplo: tamaño 3
-        boolean colocado = tableroJugador.colocarBarco(barco, x, y);
+        if (orientacionActual.equals("horizontal") && x + barcoActual.getTamaño() > 10) {
+            JOptionPane.showMessageDialog(this, "El barco no cabe aquí.", "Error", JOptionPane.ERROR_MESSAGE);
+            return;
+        } else if (orientacionActual.equals("vertical") && y + barcoActual.getTamaño() > 10) {
+            JOptionPane.showMessageDialog(this, "El barco no cabe aquí.", "Error", JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+
+        // Si el barco cabe, lo colocamos
+        boolean colocado = tableroJugador.colocarBarco(barcoActual, x, y);
 
         if (colocado) {
-            // Pintar celdas
-            if (orientacionActual.equals("horizontal")) {
-                for (int i = 0; i < barco.getTamaño(); i++) {
+            // Aumentar contador
+            colocados.put(barcoActual.getTipo(), colocados.get(barcoActual.getTipo()) + 1);
+            actualizarContadores();
+
+            // Pintar las celdas
+            for (int i = 0; i < barcoActual.getTamaño(); i++) {
+                if (orientacionActual.equals("horizontal")) {
                     botonesTablero[x + i][y].setBackground(Color.GRAY);
-                }
-            } else {
-                for (int i = 0; i < barco.getTamaño(); i++) {
+                } else {
                     botonesTablero[x][y + i].setBackground(Color.GRAY);
                 }
             }
         } else {
             JOptionPane.showMessageDialog(this, "No se pudo colocar el barco aquí", "Error", JOptionPane.ERROR_MESSAGE);
         }
+// Verifica si ya colocó todos los barcos
+        boolean todosListos = colocados.entrySet().stream()
+                .allMatch(entry -> entry.getValue().equals(maximos.get(entry.getKey())));
+
+        btnConfirmar.setEnabled(todosListos);  // Habilita el botón solo si todo está listo
+
     }
 
+    // Suponiendo que ya tienes los objetos barcoActual y tableroJugador
     private void crearTablero() {
         JPanel panelGrid = new JPanel(new java.awt.GridLayout(10, 10));
         panelGrid.setBounds(20, 170, 355, 325);
@@ -88,8 +141,17 @@ public class PantallaAsignacion extends javax.swing.JFrame {
                 int x = i;
                 int y = j;
 
-                boton.addActionListener(e -> colocarBarco(x, y));
+                // Cambiar el ActionListener para incluir la llamada a colocarBarco
+                boton.addActionListener(e -> {
+                    if (barcoActual != null) {
+                        // Llamamos a colocarBarco pasando solo el barcoActual y las coordenadas
+                        colocarBarco(x, y);
 
+                    } else {
+                        System.out.println("No se ha seleccionado un barco.");
+                    }
+                });
+                panelListaBarcos.add(boton); // Ese es el panel donde dice "Tipos de nave"
                 botonesTablero[i][j] = boton;
                 panelGrid.add(boton);
             }
@@ -142,6 +204,19 @@ public class PantallaAsignacion extends javax.swing.JFrame {
         btnConfirmar = new javax.swing.JButton();
         btnGirar = new javax.swing.JButton();
         jblFondo = new javax.swing.JLabel();
+        panelListaBarcos = new javax.swing.JPanel();
+        txtPortaAviones = new javax.swing.JLabel();
+        txtContadorPortaAviones = new javax.swing.JLabel();
+        txtSubmarino = new javax.swing.JLabel();
+        txtContadorSubmarino = new javax.swing.JLabel();
+        txtBarco = new javax.swing.JLabel();
+        txtContadorBarco = new javax.swing.JLabel();
+        txtCrucero = new javax.swing.JLabel();
+        txtContadorCrucero = new javax.swing.JLabel();
+        seleccionarPortaAviones = new javax.swing.JButton();
+        seleccionarSubmarino = new javax.swing.JButton();
+        seleccionarBarco = new javax.swing.JButton();
+        seleccionarCrucero = new javax.swing.JButton();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
         setTitle("Asignar Barcos");
@@ -170,7 +245,7 @@ public class PantallaAsignacion extends javax.swing.JFrame {
         btnVolver.setBounds(21, 14, 120, 35);
 
         jPanelFondo.add(jPanelHead);
-        jPanelHead.setBounds(0, 0, 950, 60);
+        jPanelHead.setBounds(0, 0, 0, 0);
 
         jPanelTiposNaves.setBackground(new java.awt.Color(255, 255, 255));
 
@@ -306,6 +381,184 @@ public class PantallaAsignacion extends javax.swing.JFrame {
         jPanelFondo.add(jblFondo);
         jblFondo.setBounds(0, 0, 950, 550);
 
+        txtPortaAviones.setText("Porta Aviones");
+
+        txtContadorPortaAviones.setText("0x");
+
+        txtSubmarino.setText("Submarino");
+
+        txtContadorSubmarino.setText("0x");
+
+        txtBarco.setText("Barco");
+
+        txtContadorBarco.setText("0x");
+
+        txtCrucero.setText("Crucero");
+
+        txtContadorCrucero.setText("0x");
+
+        seleccionarPortaAviones.setText("Seleccionar");
+        seleccionarPortaAviones.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                seleccionarPortaAvionesActionPerformed(evt);
+            }
+        });
+
+        seleccionarSubmarino.setText("Seleccionar");
+        seleccionarSubmarino.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                seleccionarSubmarinoActionPerformed(evt);
+            }
+        });
+
+        seleccionarBarco.setText("Seleccionar");
+        seleccionarBarco.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                seleccionarBarcoActionPerformed(evt);
+            }
+        });
+
+        seleccionarCrucero.setText("Seleccionar");
+        seleccionarCrucero.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                seleccionarCruceroActionPerformed(evt);
+            }
+        });
+
+        javax.swing.GroupLayout panelListaBarcosLayout = new javax.swing.GroupLayout(panelListaBarcos);
+        panelListaBarcos.setLayout(panelListaBarcosLayout);
+        panelListaBarcosLayout.setHorizontalGroup(
+            panelListaBarcosLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGap(0, 350, Short.MAX_VALUE)
+            .addGroup(panelListaBarcosLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, panelListaBarcosLayout.createSequentialGroup()
+                    .addContainerGap(17, Short.MAX_VALUE)
+                    .addComponent(txtPortaAviones)
+                    .addContainerGap(260, Short.MAX_VALUE)))
+            .addGroup(panelListaBarcosLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                .addGroup(panelListaBarcosLayout.createSequentialGroup()
+                    .addGap(82, 82, 82)
+                    .addComponent(txtContadorPortaAviones, javax.swing.GroupLayout.PREFERRED_SIZE, 31, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addContainerGap(237, Short.MAX_VALUE)))
+            .addGroup(panelListaBarcosLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, panelListaBarcosLayout.createSequentialGroup()
+                    .addContainerGap(226, Short.MAX_VALUE)
+                    .addComponent(txtSubmarino)
+                    .addContainerGap(66, Short.MAX_VALUE)))
+            .addGroup(panelListaBarcosLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, panelListaBarcosLayout.createSequentialGroup()
+                    .addContainerGap(272, Short.MAX_VALUE)
+                    .addComponent(txtContadorSubmarino, javax.swing.GroupLayout.PREFERRED_SIZE, 35, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addContainerGap(43, Short.MAX_VALUE)))
+            .addGroup(panelListaBarcosLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, panelListaBarcosLayout.createSequentialGroup()
+                    .addContainerGap(37, Short.MAX_VALUE)
+                    .addComponent(txtBarco)
+                    .addContainerGap(283, Short.MAX_VALUE)))
+            .addGroup(panelListaBarcosLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, panelListaBarcosLayout.createSequentialGroup()
+                    .addContainerGap(69, Short.MAX_VALUE)
+                    .addComponent(txtContadorBarco, javax.swing.GroupLayout.PREFERRED_SIZE, 31, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addContainerGap(250, Short.MAX_VALUE)))
+            .addGroup(panelListaBarcosLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, panelListaBarcosLayout.createSequentialGroup()
+                    .addContainerGap(242, Short.MAX_VALUE)
+                    .addComponent(txtCrucero)
+                    .addContainerGap(66, Short.MAX_VALUE)))
+            .addGroup(panelListaBarcosLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, panelListaBarcosLayout.createSequentialGroup()
+                    .addContainerGap(272, Short.MAX_VALUE)
+                    .addComponent(txtContadorCrucero, javax.swing.GroupLayout.PREFERRED_SIZE, 33, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addContainerGap(45, Short.MAX_VALUE)))
+            .addGroup(panelListaBarcosLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, panelListaBarcosLayout.createSequentialGroup()
+                    .addContainerGap(13, Short.MAX_VALUE)
+                    .addComponent(seleccionarPortaAviones)
+                    .addContainerGap(247, Short.MAX_VALUE)))
+            .addGroup(panelListaBarcosLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                .addGroup(panelListaBarcosLayout.createSequentialGroup()
+                    .addGap(209, 209, 209)
+                    .addComponent(seleccionarSubmarino)
+                    .addContainerGap(51, Short.MAX_VALUE)))
+            .addGroup(panelListaBarcosLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, panelListaBarcosLayout.createSequentialGroup()
+                    .addContainerGap(24, Short.MAX_VALUE)
+                    .addComponent(seleccionarBarco)
+                    .addGap(236, 236, 236)))
+            .addGroup(panelListaBarcosLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                .addGroup(panelListaBarcosLayout.createSequentialGroup()
+                    .addGap(203, 203, 203)
+                    .addComponent(seleccionarCrucero, javax.swing.GroupLayout.PREFERRED_SIZE, 102, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addContainerGap(45, Short.MAX_VALUE)))
+        );
+        panelListaBarcosLayout.setVerticalGroup(
+            panelListaBarcosLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGap(0, 190, Short.MAX_VALUE)
+            .addGroup(panelListaBarcosLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, panelListaBarcosLayout.createSequentialGroup()
+                    .addContainerGap(19, Short.MAX_VALUE)
+                    .addComponent(txtPortaAviones)
+                    .addContainerGap(155, Short.MAX_VALUE)))
+            .addGroup(panelListaBarcosLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                .addGroup(panelListaBarcosLayout.createSequentialGroup()
+                    .addContainerGap()
+                    .addComponent(txtContadorPortaAviones)
+                    .addContainerGap(168, Short.MAX_VALUE)))
+            .addGroup(panelListaBarcosLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, panelListaBarcosLayout.createSequentialGroup()
+                    .addContainerGap(17, Short.MAX_VALUE)
+                    .addComponent(txtSubmarino)
+                    .addContainerGap(157, Short.MAX_VALUE)))
+            .addGroup(panelListaBarcosLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                .addGroup(panelListaBarcosLayout.createSequentialGroup()
+                    .addContainerGap()
+                    .addComponent(txtContadorSubmarino)
+                    .addContainerGap(168, Short.MAX_VALUE)))
+            .addGroup(panelListaBarcosLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, panelListaBarcosLayout.createSequentialGroup()
+                    .addContainerGap(129, Short.MAX_VALUE)
+                    .addComponent(txtBarco)
+                    .addContainerGap(45, Short.MAX_VALUE)))
+            .addGroup(panelListaBarcosLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, panelListaBarcosLayout.createSequentialGroup()
+                    .addContainerGap(115, Short.MAX_VALUE)
+                    .addComponent(txtContadorBarco)
+                    .addContainerGap(59, Short.MAX_VALUE)))
+            .addGroup(panelListaBarcosLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, panelListaBarcosLayout.createSequentialGroup()
+                    .addContainerGap(129, Short.MAX_VALUE)
+                    .addComponent(txtCrucero)
+                    .addContainerGap(45, Short.MAX_VALUE)))
+            .addGroup(panelListaBarcosLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, panelListaBarcosLayout.createSequentialGroup()
+                    .addContainerGap(112, Short.MAX_VALUE)
+                    .addComponent(txtContadorCrucero)
+                    .addContainerGap(62, Short.MAX_VALUE)))
+            .addGroup(panelListaBarcosLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, panelListaBarcosLayout.createSequentialGroup()
+                    .addContainerGap(48, Short.MAX_VALUE)
+                    .addComponent(seleccionarPortaAviones)
+                    .addContainerGap(119, Short.MAX_VALUE)))
+            .addGroup(panelListaBarcosLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                .addGroup(panelListaBarcosLayout.createSequentialGroup()
+                    .addGap(49, 49, 49)
+                    .addComponent(seleccionarSubmarino)
+                    .addContainerGap(118, Short.MAX_VALUE)))
+            .addGroup(panelListaBarcosLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, panelListaBarcosLayout.createSequentialGroup()
+                    .addContainerGap(153, Short.MAX_VALUE)
+                    .addComponent(seleccionarBarco)
+                    .addGap(14, 14, 14)))
+            .addGroup(panelListaBarcosLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, panelListaBarcosLayout.createSequentialGroup()
+                    .addContainerGap(153, Short.MAX_VALUE)
+                    .addComponent(seleccionarCrucero)
+                    .addGap(14, 14, 14)))
+        );
+
+        jPanelFondo.add(panelListaBarcos);
+        panelListaBarcos.setBounds(500, 170, 350, 190);
+
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
         getContentPane().setLayout(layout);
         layout.setHorizontalGroup(
@@ -348,12 +601,24 @@ public class PantallaAsignacion extends javax.swing.JFrame {
         this.dispose();
     }
 
+    private boolean validarPosicion(Barco barco, int x, int y) {
+        for (int i = 0; i < barco.getTamaño(); i++) {
+            if (orientacionActual.equals("horizontal") && botonesTablero[x + i][y].getBackground() == Color.GRAY) {
+                return false;
+            } else if (orientacionActual.equals("vertical") && botonesTablero[x][y + i].getBackground() == Color.GRAY) {
+                return false;
+            }
+        }
+        return true;
+    }
 
     private void btnGirarMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_btnGirarMouseClicked
         if (orientacionActual.equals("horizontal")) {
             orientacionActual = "vertical";
+            btnGirar.setBackground(Color.RED);
         } else {
             orientacionActual = "horizontal";
+            btnGirar.setBackground(Color.GREEN);
         }
     }//GEN-LAST:event_btnGirarMouseClicked
 
@@ -362,6 +627,42 @@ public class PantallaAsignacion extends javax.swing.JFrame {
         escoger.setVisible(true);
         this.dispose();
     }//GEN-LAST:event_btnVolverMouseClicked
+
+    private void seleccionarPortaAvionesActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_seleccionarPortaAvionesActionPerformed
+        if (colocados.get(TipoBarco.PORTAAVIONES) < maximos.get(TipoBarco.PORTAAVIONES)) {
+            tipoSeleccionado = TipoBarco.PORTAAVIONES;
+            barcoActual = new Barco(tipoSeleccionado);
+        } else {
+            JOptionPane.showMessageDialog(this, "Ya colocaste todos los Portaaviones.");
+        }
+    }//GEN-LAST:event_seleccionarPortaAvionesActionPerformed
+
+    private void seleccionarSubmarinoActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_seleccionarSubmarinoActionPerformed
+        if (colocados.get(TipoBarco.SUBMARINO) < maximos.get(TipoBarco.SUBMARINO)) {
+            tipoSeleccionado = TipoBarco.SUBMARINO;
+            barcoActual = new Barco(tipoSeleccionado);
+        } else {
+            JOptionPane.showMessageDialog(this, "Ya colocaste todos los Submarinos.");
+        }
+    }//GEN-LAST:event_seleccionarSubmarinoActionPerformed
+
+    private void seleccionarBarcoActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_seleccionarBarcoActionPerformed
+        if (colocados.get(TipoBarco.BARCO) < maximos.get(TipoBarco.BARCO)) {
+            tipoSeleccionado = TipoBarco.BARCO;
+            barcoActual = new Barco(tipoSeleccionado);
+        } else {
+            JOptionPane.showMessageDialog(this, "Ya colocaste todas las Lanchas.");
+        }
+    }//GEN-LAST:event_seleccionarBarcoActionPerformed
+
+    private void seleccionarCruceroActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_seleccionarCruceroActionPerformed
+        if (colocados.get(TipoBarco.CRUCERO) < maximos.get(TipoBarco.CRUCERO)) {
+            tipoSeleccionado = TipoBarco.CRUCERO;
+            barcoActual = new Barco(tipoSeleccionado);
+        } else {
+            JOptionPane.showMessageDialog(this, "Ya colocaste todos los Cruceros.");
+        }
+    }//GEN-LAST:event_seleccionarCruceroActionPerformed
 
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
@@ -381,5 +682,18 @@ public class PantallaAsignacion extends javax.swing.JFrame {
     private javax.swing.JLabel jblIconApuntar;
     private javax.swing.JLabel jblNombreJugador;
     private javax.swing.JLabel jblTiposNave;
+    private javax.swing.JPanel panelListaBarcos;
+    private javax.swing.JButton seleccionarBarco;
+    private javax.swing.JButton seleccionarCrucero;
+    private javax.swing.JButton seleccionarPortaAviones;
+    private javax.swing.JButton seleccionarSubmarino;
+    private javax.swing.JLabel txtBarco;
+    private javax.swing.JLabel txtContadorBarco;
+    private javax.swing.JLabel txtContadorCrucero;
+    private javax.swing.JLabel txtContadorPortaAviones;
+    private javax.swing.JLabel txtContadorSubmarino;
+    private javax.swing.JLabel txtCrucero;
+    private javax.swing.JLabel txtPortaAviones;
+    private javax.swing.JLabel txtSubmarino;
     // End of variables declaration//GEN-END:variables
 }

@@ -5,6 +5,10 @@
 package Pantallas;
 
 import java.awt.Color;
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
+import java.io.IOException;
+import java.net.Socket;
 import utilerias.BotonPersonalizado;
 import utilerias.PanelTransparente;
 import utilerias.PersonalizacionGeneral;
@@ -12,6 +16,7 @@ import negocio.*;
 import javax.swing.JButton;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
+import javax.swing.SwingUtilities;
 
 /**
  *
@@ -21,21 +26,80 @@ public class PantallaJuego extends javax.swing.JFrame {
 
     private ViewModels.JuegoViewModel vmJuego;
     private JButton[][] botonesTablero = new JButton[10][10];
+    private Socket socket;
+    private DataInputStream in;
+    private DataOutputStream out;
+    private boolean esMiTurno = false;
+    
+    private Tablero tableroJugador;
+    private Tablero tableroEnemigo;
 
-    private Tablero tableroCPU;
+
 
     String fondo = "recursos/interfaz/fondoColocarBarcos.png";
 
     /**
      * Creates new form PantallaJuego
      */
-   public PantallaJuego(Tablero tableroJugador1, Tablero tableroJugador2) {
-    initComponents();
-    this.vmJuego = new ViewModels.JuegoViewModel(tableroJugador1, tableroJugador2);
-    cargarInterfaz();
+    public PantallaJuego(Tablero tableroJugador1, Tablero tableroJugador2) {
+        initComponents();
+        this.vmJuego = new ViewModels.JuegoViewModel(tableroJugador1, tableroJugador2);
+        cargarInterfaz();
+        try {
+            socket = new Socket("localhost", 12345);
+            in = new DataInputStream(socket.getInputStream());
+            out = new DataOutputStream(socket.getOutputStream());
+
+            new Thread(() -> escucharServidor()).start();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+    }
+
+    private void escucharServidor() {
+    try {
+        while (true) {
+            String mensaje = in.readUTF();
+            if (mensaje.equals("TU_TURNO")) {
+                esMiTurno = true;
+                SwingUtilities.invokeLater(() ->
+                    JOptionPane.showMessageDialog(this, "¡Tu turno!")
+                );
+                habilitarBotonesAtaque(true);
+            } else if (mensaje.equals("ESPERA")) {
+                esMiTurno = false;
+                habilitarBotonesAtaque(false);
+            } else if (mensaje.startsWith("ENEMIGO_DISPARO")) {
+                String[] partes = mensaje.split(":");
+                String[] coords = partes[1].split(",");
+                int x = Integer.parseInt(coords[0]);
+                int y = Integer.parseInt(coords[1]);
+                String resultado = partes[2];
+
+                // tableroJugador.realizarDisparo(x, y, resultado);
+            } else if (mensaje.startsWith("RESULTADO_DISPARO")) {
+                String[] partes = mensaje.split(":");
+                String[] coords = partes[1].split(",");
+                int x = Integer.parseInt(coords[0]);
+                int y = Integer.parseInt(coords[1]);
+                String resultado = partes[2];
+
+                // tableroEnemigo.marcarResultado(x, y, resultado);
+            } else if (mensaje.equals("GANASTE") || mensaje.equals("PERDISTE")) {
+                SwingUtilities.invokeLater(() ->
+                    JOptionPane.showMessageDialog(this, mensaje)
+                );
+                socket.close();
+                break;
+            }
+        }
+    } catch (IOException e) {
+        e.printStackTrace();
+    }
 }
 
-
+    
     private void cargarInterfaz() {
 
         PersonalizacionGeneral.colocarImagenLabel(jblFondo, fondo);
@@ -59,82 +123,90 @@ public class PantallaJuego extends javax.swing.JFrame {
 
     }
 
-  private void crearTableroJugador1() {
-    JPanel panelGrid = new JPanel(new java.awt.GridLayout(10, 10));
-    panelGrid.setBounds(20, 140, 390, 325);
-    panelGrid.setOpaque(false);
+    private void crearTableroJugador1() {
+        JPanel panelGrid = new JPanel(new java.awt.GridLayout(10, 10));
+        panelGrid.setBounds(20, 140, 390, 325);
+        panelGrid.setOpaque(false);
 
-    for (int i = 0; i < 10; i++) {
-        for (int j = 0; j < 10; j++) {
-            JButton boton = new JButton();
-            boton.setBackground(new Color(173, 216, 230));
-            boton.setFocusPainted(false);
-            int x = i;
-            int y = j;
+        for (int i = 0; i < 10; i++) {
+            for (int j = 0; j < 10; j++) {
+                JButton boton = new JButton();
+                boton.setBackground(new Color(173, 216, 230));
+                boton.setFocusPainted(false);
+                int x = i;
+                int y = j;
 
-            boton.addActionListener(e -> disparar(x, y));
+                boton.addActionListener(e -> disparar(x, y));
 
-            botonesTablero[i][j] = boton;
-            panelGrid.add(boton);
+                botonesTablero[i][j] = boton;
+                panelGrid.add(boton);
+            }
+        }
+
+        this.getContentPane().add(panelGrid, 0);
+    }
+
+    private void crearTableroJugador2() {
+        JPanel panelGrid = new JPanel(new java.awt.GridLayout(10, 10));
+        panelGrid.setBounds(540, 140, 390, 325);
+        panelGrid.setOpaque(false);
+
+        for (int i = 0; i < 10; i++) {
+            for (int j = 0; j < 10; j++) {
+                JButton boton = new JButton();
+                boton.setBackground(new Color(173, 216, 230));
+                boton.setFocusPainted(false);
+                int x = i;
+                int y = j;
+
+                boton.addActionListener(e -> disparar(x, y));
+
+                botonesTablero[i][j] = boton;
+                panelGrid.add(boton);
+            }
+        }
+
+        this.getContentPane().add(panelGrid, 0);
+    }
+
+    private void disparar(int x, int y) {
+        boolean impacto = vmJuego.disparar(x, y);
+
+        if (impacto) {
+            botonesTablero[x][y].setBackground(Color.RED);
+        } else {
+            botonesTablero[x][y].setBackground(Color.WHITE);
+        }
+
+        botonesTablero[x][y].setEnabled(false);
+
+        String ganador = vmJuego.obtenerGanador();
+
+        if (ganador != null) {
+            JOptionPane.showMessageDialog(this, ganador + " ha ganado la partida!");
+        } else {
+            vmJuego.cambiarTurno();
+            actualizarTurnoEnPantalla();
         }
     }
 
-    this.getContentPane().add(panelGrid, 0);
-}
-  
-  
-  private void crearTableroJugador2() {
-    JPanel panelGrid = new JPanel(new java.awt.GridLayout(10, 10));
-    panelGrid.setBounds(540, 140, 390, 325);
-    panelGrid.setOpaque(false);
-
+    public void habilitarBotonesAtaque(boolean activar) {
     for (int i = 0; i < 10; i++) {
         for (int j = 0; j < 10; j++) {
-            JButton boton = new JButton();
-            boton.setBackground(new Color(173, 216, 230));
-            boton.setFocusPainted(false);
-            int x = i;
-            int y = j;
-
-            boton.addActionListener(e -> disparar(x, y));
-
-            botonesTablero[i][j] = boton;
-            panelGrid.add(boton);
+            //JButton boton = tableroEnemigo.getBoton(i, j);
+           // boton.setEnabled(activar && !yaFueDisparado(i, j));
         }
     }
-
-    this.getContentPane().add(panelGrid, 0);
-}  
-
-
-
-   private void disparar(int x, int y) {
-    boolean impacto = vmJuego.disparar(x, y);
-
-    if (impacto) {
-        botonesTablero[x][y].setBackground(Color.RED);
-    } else {
-        botonesTablero[x][y].setBackground(Color.WHITE);
-    }
-
-    botonesTablero[x][y].setEnabled(false);
-
-    if (vmJuego.verificarGanador()) {
-        String ganador = vmJuego.esTurnoJugador1() ? "Jugador 1" : "Jugador 2";
-        JOptionPane.showMessageDialog(this, ganador + " ha ganado la partida!");
-    } else {
-        vmJuego.cambiarTurno();
-        actualizarTurnoEnPantalla();
-    }
-}
-private void actualizarTurnoEnPantalla() {
-    if (vmJuego.esTurnoJugador1()) {
-        jblTurno.setText("Turno: Jugador 1");
-    } else {
-        jblTurno.setText("Turno: Jugador 2");
-    }
 }
 
+    
+    private void actualizarTurnoEnPantalla() {
+        if (vmJuego.esTurnoJugador1()) {
+            jblTurno.setText("Turno: Jugador 1");
+        } else {
+            jblTurno.setText("Turno: Jugador 2");
+        }
+    }
 
     /**
      * This method is called from within the constructor to initialize the form.
