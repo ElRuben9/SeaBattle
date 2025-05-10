@@ -5,66 +5,73 @@
 package Pantallas;
 
 import java.awt.Color;
-import java.io.IOException;
-import java.net.ServerSocket;
-import java.net.Socket;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import javax.swing.JOptionPane;
 import utilerias.BotonPersonalizado;
 import utilerias.PersonalizacionGeneral;
+import javax.swing.*;
+import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.io.IOException;
+import java.net.Socket;
 
 /**
  *
  * @author ruben
  */
-public class PantallaEscogerPartida extends javax.swing.JFrame {
+public class PantallaConexion extends javax.swing.JFrame {
 
     String fondo = "recursos/interfaz/fondoEscogerPartida.png";
-
+    private PantallaEscogerPartida origen;
     PantallaPrincipal inicio;
 
     /**
      * Creates new form PantallaPrincipal
      */
-    public PantallaEscogerPartida(PantallaPrincipal inicio) {
+    public PantallaConexion(PantallaEscogerPartida origen) {
+        this.origen = origen;
         initComponents();
 
-        this.inicio = inicio;
+        setTitle("Conectar a Sala");
+        setSize(400, 300);
+        setLocationRelativeTo(null);
+        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        setLayout(new GridBagLayout());
 
-        cargarInterfaz();
+        GridBagConstraints gbc = new GridBagConstraints();
 
+        JLabel lblIP = new JLabel("IP del Servidor:");
+        JLabel lblPuerto = new JLabel("Puerto:");
+
+        txtIP = new JTextField("127.0.0.1", 15);
+        txtPuerto = new JTextField("5000", 15);
+        btnConectar = new JButton("Conectar");
+
+        gbc.insets = new Insets(10, 10, 10, 10);
+        gbc.gridx = 0;
+        gbc.gridy = 0;
+        add(lblIP, gbc);
+        gbc.gridx = 1;
+        add(txtIP, gbc);
+
+        gbc.gridx = 0;
+        gbc.gridy = 1;
+        add(lblPuerto, gbc);
+        gbc.gridx = 1;
+        add(txtPuerto, gbc);
+
+        gbc.gridx = 0;
+        gbc.gridy = 2;
+        gbc.gridwidth = 2;
+        add(btnConectar, gbc);
+
+        btnConectar.addActionListener(new ActionListener() {
+    @Override
+    public void actionPerformed(ActionEvent e) {
+        btnConectarActionPerformed(e);
     }
-
-    private void cargarInterfaz() {
-        try {
-
-            PersonalizacionGeneral.colocarImagenLabel(jblFondo, fondo);
-            personazilarBotones();
-
-        } catch (Exception ex) {
-            Logger.getLogger(PantallaEscogerPartida.class.getName()).log(Level.SEVERE, null, ex);
-        }
-
-    }
-
-    private void personazilarBotones() {
-
-        btnCrear.setContentAreaFilled(false);
-        btnCrear.setBorderPainted(false);
-        btnCrear.setOpaque(false);
-        btnCrear.setUI(new BotonPersonalizado(25, new Color(0, 166, 255), new Color(82, 250, 255), 3));
-
-        btnUnirse.setContentAreaFilled(false);
-        btnUnirse.setBorderPainted(false);
-        btnUnirse.setOpaque(false);
-        btnUnirse.setUI(new BotonPersonalizado(25, new Color(0, 166, 255), new Color(82, 250, 255), 3));
-
-        btnVolver.setContentAreaFilled(false);
-        btnVolver.setBorderPainted(false);
-        btnVolver.setOpaque(false);
-        btnVolver.setUI(new BotonPersonalizado(25, new Color(0, 166, 255), new Color(82, 250, 255), 3));
-
+});
     }
 
     /**
@@ -81,10 +88,9 @@ public class PantallaEscogerPartida extends javax.swing.JFrame {
         jblConfiguracion = new javax.swing.JLabel();
         jPanelDerechos = new javax.swing.JPanel();
         jblDerechos = new javax.swing.JLabel();
-        btnVolver = new javax.swing.JButton();
-        btnCrear = new javax.swing.JButton();
-        btnUnirse = new javax.swing.JButton();
-        jblFondo = new javax.swing.JLabel();
+        txtPuerto = new javax.swing.JTextField();
+        txtIP = new javax.swing.JTextField();
+        btnConectar = new javax.swing.JButton();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
         setTitle("Batalla Naval");
@@ -122,7 +128,7 @@ public class PantallaEscogerPartida extends javax.swing.JFrame {
         );
 
         jPanelFondo.add(jPanelHead);
-        jPanelHead.setBounds(0, 0, 0, 0);
+        jPanelHead.setBounds(0, 0, 950, 60);
 
         jPanelDerechos.setBackground(new java.awt.Color(13, 26, 51));
 
@@ -148,40 +154,22 @@ public class PantallaEscogerPartida extends javax.swing.JFrame {
         jPanelFondo.add(jPanelDerechos);
         jPanelDerechos.setBounds(0, 550, 950, 50);
 
-        btnVolver.setBackground(new java.awt.Color(0, 166, 255));
-        btnVolver.setFont(new java.awt.Font("Monospaced", 1, 24)); // NOI18N
-        btnVolver.setText("Volver");
-        btnVolver.addMouseListener(new java.awt.event.MouseAdapter() {
-            public void mouseClicked(java.awt.event.MouseEvent evt) {
-                btnVolverMouseClicked(evt);
-            }
-        });
-        jPanelFondo.add(btnVolver);
-        btnVolver.setBounds(50, 440, 200, 60);
+        txtPuerto.setText("Puerto");
+        jPanelFondo.add(txtPuerto);
+        txtPuerto.setBounds(120, 290, 130, 22);
 
-        btnCrear.setBackground(new java.awt.Color(0, 166, 255));
-        btnCrear.setFont(new java.awt.Font("Monospaced", 1, 24)); // NOI18N
-        btnCrear.setText("Crear Sala");
-        btnCrear.addMouseListener(new java.awt.event.MouseAdapter() {
-            public void mouseClicked(java.awt.event.MouseEvent evt) {
-                btnCrearMouseClicked(evt);
-            }
-        });
-        jPanelFondo.add(btnCrear);
-        btnCrear.setBounds(50, 200, 200, 60);
+        txtIP.setText("IP");
+        jPanelFondo.add(txtIP);
+        txtIP.setBounds(120, 230, 130, 22);
 
-        btnUnirse.setBackground(new java.awt.Color(0, 166, 255));
-        btnUnirse.setFont(new java.awt.Font("Monospaced", 1, 24)); // NOI18N
-        btnUnirse.setText("<html><center>Uniserse a <br> una Sala</center></html>");
-        btnUnirse.addMouseListener(new java.awt.event.MouseAdapter() {
-            public void mouseClicked(java.awt.event.MouseEvent evt) {
-                btnUnirseMouseClicked(evt);
+        btnConectar.setText("Conectar");
+        btnConectar.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btnConectarActionPerformed(evt);
             }
         });
-        jPanelFondo.add(btnUnirse);
-        btnUnirse.setBounds(50, 320, 200, 60);
-        jPanelFondo.add(jblFondo);
-        jblFondo.setBounds(0, 0, 950, 550);
+        jPanelFondo.add(btnConectar);
+        btnConectar.setBounds(300, 450, 90, 20);
 
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
         getContentPane().setLayout(layout);
@@ -198,51 +186,42 @@ public class PantallaEscogerPartida extends javax.swing.JFrame {
         setLocationRelativeTo(null);
     }// </editor-fold>//GEN-END:initComponents
 
-    private void btnVolverMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_btnVolverMouseClicked
-        // TODO add your handling code here:
-        inicio.setVisible(true);
+    private void btnConectarActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnConectarActionPerformed
+
+    String ip = txtIP.getText().trim();
+    int puerto;
+
+    try {
+        puerto = Integer.parseInt(txtPuerto.getText().trim());
+    } catch (NumberFormatException e) {
+        JOptionPane.showMessageDialog(this, "El puerto debe ser un número válido.", "Error", JOptionPane.ERROR_MESSAGE);
+        return;
+    }
+
+    System.out.println("Intentando conectar a " + ip + " en el puerto " + puerto);
+
+    try {
+        Socket socket = new Socket(ip, puerto);
+        System.out.println("Conexión establecida con el servidor");
+        PantallaJuego juego = new PantallaJuego(socket, false); // false = jugador cliente
+        juego.setVisible(true);
         this.dispose();
-    }//GEN-LAST:event_btnVolverMouseClicked
+    } catch (IOException e) {
+        System.out.println("Error al intentar conectar: " + e.getMessage());
+        JOptionPane.showMessageDialog(this, "No se pudo conectar al servidor.\n" + e.getMessage(), "Error de Conexión", JOptionPane.ERROR_MESSAGE);
+    }
 
-    private void btnCrearMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_btnCrearMouseClicked
-        new Thread(() -> {
-            try {
-                ServerSocket servidor = new ServerSocket(5000);
-                System.out.println("Esperando a un jugador...");
-
-                Socket socket = servidor.accept();
-                System.out.println("Jugador conectado desde " + socket.getInetAddress());
-
-                // Iniciar juego como servidor
-                PantallaJuego juego = new PantallaJuego(socket, true);
-                juego.setVisible(true);
-                this.setVisible(false); // oculta la pantalla actual
-
-            } catch (IOException ex) {
-                ex.printStackTrace();
-                JOptionPane.showMessageDialog(this, "Error al crear la sala.", "Error", JOptionPane.ERROR_MESSAGE);
-            }
-        }).start();
-
-    }//GEN-LAST:event_btnCrearMouseClicked
-
-    private void btnUnirseMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_btnUnirseMouseClicked
-        PantallaConexion conexion = new PantallaConexion(this);
-        conexion.setVisible(true);
-        this.setVisible(false);
-
-    }//GEN-LAST:event_btnUnirseMouseClicked
+    }//GEN-LAST:event_btnConectarActionPerformed
 
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
-    private javax.swing.JButton btnCrear;
-    private javax.swing.JButton btnUnirse;
-    private javax.swing.JButton btnVolver;
+    private javax.swing.JButton btnConectar;
     private javax.swing.JPanel jPanelDerechos;
     private javax.swing.JPanel jPanelFondo;
     private javax.swing.JPanel jPanelHead;
     private javax.swing.JLabel jblConfiguracion;
     private javax.swing.JLabel jblDerechos;
-    private javax.swing.JLabel jblFondo;
+    private javax.swing.JTextField txtIP;
+    private javax.swing.JTextField txtPuerto;
     // End of variables declaration//GEN-END:variables
 }

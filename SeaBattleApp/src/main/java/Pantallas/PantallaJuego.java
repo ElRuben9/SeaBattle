@@ -5,9 +5,12 @@
 package Pantallas;
 
 import java.awt.Color;
+import java.io.BufferedReader;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.PrintWriter;
 import java.net.Socket;
 import utilerias.BotonPersonalizado;
 import utilerias.PanelTransparente;
@@ -30,76 +33,127 @@ public class PantallaJuego extends javax.swing.JFrame {
     private DataInputStream in;
     private DataOutputStream out;
     private boolean esMiTurno = false;
-    
+
+    private boolean esServidor;
+    private BufferedReader entrada;
+    private PrintWriter salida;
+
     private Tablero tableroJugador;
     private Tablero tableroEnemigo;
-
-
 
     String fondo = "recursos/interfaz/fondoColocarBarcos.png";
 
     /**
      * Creates new form PantallaJuego
      */
-    public PantallaJuego(Tablero tableroJugador1, Tablero tableroJugador2) {
-        initComponents();
-        this.vmJuego = new ViewModels.JuegoViewModel(tableroJugador1, tableroJugador2);
-        cargarInterfaz();
-        try {
-            socket = new Socket("localhost", 12345);
-            in = new DataInputStream(socket.getInputStream());
-            out = new DataOutputStream(socket.getOutputStream());
+    public PantallaJuego(Socket socket, boolean esServidor) {
+        this.socket = socket;
+        this.esServidor = esServidor;
 
-            new Thread(() -> escucharServidor()).start();
-        } catch (IOException e) {
-            e.printStackTrace();
+        initComponents();
+
+        inicializarComunicacion();
+
+        if (esServidor) {
+            setTitle("Servidor - Batalla Naval");
+        } else {
+            setTitle("Cliente - Batalla Naval");
         }
 
+    }
+
+    private void inicializarComunicacion() {
+        try {
+            entrada = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+            salida = new PrintWriter(socket.getOutputStream(), true);
+
+            // Puedes iniciar un hilo para escuchar mensajes entrantes
+            new Thread(() -> {
+                try {
+                    String mensaje;
+                    while ((mensaje = entrada.readLine()) != null) {
+                        procesarMensajeRecibido(mensaje);
+                    }
+                } catch (IOException ex) {
+                    System.err.println("Error al leer del socket: " + ex.getMessage());
+                }
+            }).start();
+
+        } catch (IOException ex) {
+            JOptionPane.showMessageDialog(this, "Error al establecer comunicación con el otro jugador.", "Error", JOptionPane.ERROR_MESSAGE);
+            ex.printStackTrace();
+        }
+    }
+
+    private void enviarMensaje(String mensaje) {
+        salida.println(mensaje);
+    }
+
+
+    private void procesarMensajeRecibido(String mensaje) {
+        System.out.println("Mensaje recibido: " + mensaje);
+       
     }
 
     private void escucharServidor() {
-    try {
-        while (true) {
-            String mensaje = in.readUTF();
-            if (mensaje.equals("TU_TURNO")) {
-                esMiTurno = true;
-                SwingUtilities.invokeLater(() ->
-                    JOptionPane.showMessageDialog(this, "¡Tu turno!")
-                );
-                habilitarBotonesAtaque(true);
-            } else if (mensaje.equals("ESPERA")) {
-                esMiTurno = false;
-                habilitarBotonesAtaque(false);
-            } else if (mensaje.startsWith("ENEMIGO_DISPARO")) {
-                String[] partes = mensaje.split(":");
-                String[] coords = partes[1].split(",");
-                int x = Integer.parseInt(coords[0]);
-                int y = Integer.parseInt(coords[1]);
-                String resultado = partes[2];
+        try {
+            while (true) {
+                String mensaje = in.readUTF();
+                if (mensaje.equals("TU_TURNO")) {
+                    esMiTurno = true;
+                    SwingUtilities.invokeLater(()
+                            -> JOptionPane.showMessageDialog(this, "¡Tu turno!")
+                    );
 
-                // tableroJugador.realizarDisparo(x, y, resultado);
-            } else if (mensaje.startsWith("RESULTADO_DISPARO")) {
-                String[] partes = mensaje.split(":");
-                String[] coords = partes[1].split(",");
-                int x = Integer.parseInt(coords[0]);
-                int y = Integer.parseInt(coords[1]);
-                String resultado = partes[2];
+                } else if (mensaje.equals("ESPERA")) {
+                    esMiTurno = false;
 
-                // tableroEnemigo.marcarResultado(x, y, resultado);
-            } else if (mensaje.equals("GANASTE") || mensaje.equals("PERDISTE")) {
-                SwingUtilities.invokeLater(() ->
-                    JOptionPane.showMessageDialog(this, mensaje)
-                );
-                socket.close();
-                break;
+                } else if (mensaje.startsWith("ENEMIGO_DISPARO")) {
+                    String[] partes = mensaje.split(":");
+                    String[] coords = partes[1].split(",");
+                    int x = Integer.parseInt(coords[0]);
+                    int y = Integer.parseInt(coords[1]);
+                    String resultado = partes[2];
+
+                    if (resultado.equals("AGUA")) {
+                        botonesTableroJugador[x][y].setBackground(Color.WHITE);
+                    } else if (resultado.equals("IMPACTO")) {
+                        botonesTableroJugador[x][y].setBackground(Color.RED);
+                    }
+
+                } else if (mensaje.startsWith("RESULTADO_DISPARO")) {
+                    String[] partes = mensaje.split(":");
+                    String[] coords = partes[1].split(",");
+                    int x = Integer.parseInt(coords[0]);
+                    int y = Integer.parseInt(coords[1]);
+                    String resultado = partes[2];
+
+                    Color color = switch (resultado) {
+                        case "IMPACTO" ->
+                            Color.RED;
+                        case "HUNDIDO" ->
+                            Color.ORANGE;
+                        case "AGUA" ->
+                            Color.WHITE;
+                        default ->
+                            Color.GRAY;
+                    };
+                    botonesTablero[x][y].setBackground(color);
+                    botonesTablero[x][y].setEnabled(false);
+
+                } else if (mensaje.equals("GANASTE") || mensaje.equals("PERDISTE")) {
+                    SwingUtilities.invokeLater(()
+                            -> JOptionPane.showMessageDialog(this, mensaje)
+                    );
+                    socket.close();
+                    break;
+                }
             }
+        } catch (IOException e) {
+            e.printStackTrace();
         }
-    } catch (IOException e) {
-        e.printStackTrace();
     }
-}
 
-    
     private void cargarInterfaz() {
 
         PersonalizacionGeneral.colocarImagenLabel(jblFondo, fondo);
@@ -122,6 +176,8 @@ public class PantallaJuego extends javax.swing.JFrame {
         btnAtacar.setUI(new BotonPersonalizado(25, new Color(0, 166, 255), new Color(82, 250, 255), 3));
 
     }
+    private JButton[][] botonesTableroJugador = new JButton[10][10];
+    private JButton[][] botonesTableroEnemigo = new JButton[10][10];
 
     private void crearTableroJugador1() {
         JPanel panelGrid = new JPanel(new java.awt.GridLayout(10, 10));
@@ -137,8 +193,7 @@ public class PantallaJuego extends javax.swing.JFrame {
                 int y = j;
 
                 boton.addActionListener(e -> disparar(x, y));
-
-                botonesTablero[i][j] = boton;
+                botonesTableroJugador[i][j] = boton;
                 panelGrid.add(boton);
             }
         }
@@ -161,7 +216,7 @@ public class PantallaJuego extends javax.swing.JFrame {
 
                 boton.addActionListener(e -> disparar(x, y));
 
-                botonesTablero[i][j] = boton;
+                botonesTableroEnemigo[i][j] = boton;
                 panelGrid.add(boton);
             }
         }
@@ -170,36 +225,26 @@ public class PantallaJuego extends javax.swing.JFrame {
     }
 
     private void disparar(int x, int y) {
-        boolean impacto = vmJuego.disparar(x, y);
-
-        if (impacto) {
-            botonesTablero[x][y].setBackground(Color.RED);
-        } else {
-            botonesTablero[x][y].setBackground(Color.WHITE);
+        if (!esMiTurno) {
+            JOptionPane.showMessageDialog(this, "No es tu turno.");
+            return;
         }
 
-        botonesTablero[x][y].setEnabled(false);
+        try {
+            // Enviar disparo al servidor
+            String mensaje = "DISPARO:" + x + "," + y;
+            out.writeUTF(mensaje);
+            out.flush();
 
-        String ganador = vmJuego.obtenerGanador();
+            // Bloquear turno hasta recibir respuesta del servidor
+            esMiTurno = false;
 
-        if (ganador != null) {
-            JOptionPane.showMessageDialog(this, ganador + " ha ganado la partida!");
-        } else {
-            vmJuego.cambiarTurno();
-            actualizarTurnoEnPantalla();
-        }
-    }
-
-    public void habilitarBotonesAtaque(boolean activar) {
-    for (int i = 0; i < 10; i++) {
-        for (int j = 0; j < 10; j++) {
-            //JButton boton = tableroEnemigo.getBoton(i, j);
-           // boton.setEnabled(activar && !yaFueDisparado(i, j));
+        } catch (IOException e) {
+            e.printStackTrace();
+            JOptionPane.showMessageDialog(this, "Error al enviar disparo al servidor.");
         }
     }
-}
 
-    
     private void actualizarTurnoEnPantalla() {
         if (vmJuego.esTurnoJugador1()) {
             jblTurno.setText("Turno: Jugador 1");
@@ -374,7 +419,15 @@ public class PantallaJuego extends javax.swing.JFrame {
     }// </editor-fold>//GEN-END:initComponents
 
     private void btnAbandonarMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_btnAbandonarMouseClicked
-        // TODO add your handling code here:
+
+        try {
+            out.writeUTF("ABANDONAR");
+            socket.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        dispose();
+
     }//GEN-LAST:event_btnAbandonarMouseClicked
 
     private void btnAtacarMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_btnAtacarMouseClicked
