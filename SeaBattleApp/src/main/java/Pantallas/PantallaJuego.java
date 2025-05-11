@@ -71,7 +71,7 @@ public class PantallaJuego extends javax.swing.JFrame {
             new Thread(() -> {
                 try {
                     String mensaje;
-                    while ((mensaje = entrada.readLine()) != null) {
+                    while ((mensaje = in.readLine()) != null) {
                         procesarMensajeRecibido(mensaje);
                     }
                 } catch (IOException ex) {

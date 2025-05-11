@@ -1,2 +1,2 @@
-nombre=Juan 2
-color=204,0,204
+nombre=xxc
+color=0,255,255

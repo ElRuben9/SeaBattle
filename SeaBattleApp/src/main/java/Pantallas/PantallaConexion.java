@@ -13,7 +13,13 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
 import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.PrintWriter;
 import java.net.Socket;
 
 /**
@@ -191,27 +197,75 @@ public class PantallaConexion extends javax.swing.JFrame {
     String ip = txtIP.getText().trim();
     int puerto;
 
-    try {
-        puerto = Integer.parseInt(txtPuerto.getText().trim());
-    } catch (NumberFormatException e) {
-        JOptionPane.showMessageDialog(this, "El puerto debe ser un número válido.", "Error", JOptionPane.ERROR_MESSAGE);
-        return;
-    }
+//    try {
+//        puerto = Integer.parseInt(txtPuerto.getText().trim());
+//    } catch (NumberFormatException e) {
+//        JOptionPane.showMessageDialog(this, "El puerto debe ser un número válido.", "Error", JOptionPane.ERROR_MESSAGE);
+//        return;
+//    }
+//
+//    System.out.println("Intentando conectar a " + ip + " en el puerto " + puerto);
+//
+//    try {
+//        Socket socket = new Socket(ip, puerto);
+//        System.out.println("Conexión establecida con el servidor");
+//        PantallaAsignacion asi = new PantallaAsignacion(origen, socket, false);
+//        asi.setVisible(true);
+//        
+//        this.dispose();
+//    } catch (IOException e) {
+//        System.out.println("Error al intentar conectar: " + e.getMessage());
+//        JOptionPane.showMessageDialog(this, "No se pudo conectar al servidor.\n" + e.getMessage(), "Error de Conexión", JOptionPane.ERROR_MESSAGE);
+//    }
 
-    System.out.println("Intentando conectar a " + ip + " en el puerto " + puerto);
+        new Thread(() -> {
+        try {
+            
+            
+            String colorString = "";
+            String nombre = "";
+            
+            if(new File("jugador.txt").exists()){
+            
+                try (BufferedReader reader = new BufferedReader(new FileReader("jugador.txt"))) {
+                    String linea;
+                    while ((linea = reader.readLine()) != null) {
+                        String[] partes = linea.split("=");
+                        if (partes.length == 2) {
+                            if (partes[0].equals("nombre")) {
+                                nombre = partes[1];
+                            } else if (partes[0].equals("color")) {
+                                colorString = partes[1];
+                            }
+                        }
+                    }
+                }
+                catch (FileNotFoundException ex) {
+                Logger.getLogger(PantallaPrincipal.class.getName()).log(Level.SEVERE, null, ex);
+                }
+            }
+                
+            
+            
+            
+            Socket socket = new Socket(ip, 5000); // IP del servidor y puerto deben coincidir
+            System.out.println("Conectado al servidor en " + ip);
+            
 
-    try {
-        Socket socket = new Socket(ip, puerto);
-        System.out.println("Conexión establecida con el servidor");
-        PantallaAsignacion asi = new PantallaAsignacion(origen, socket, false);
-        asi.setVisible(true);
-        
-        this.dispose();
-    } catch (IOException e) {
-        System.out.println("Error al intentar conectar: " + e.getMessage());
-        JOptionPane.showMessageDialog(this, "No se pudo conectar al servidor.\n" + e.getMessage(), "Error de Conexión", JOptionPane.ERROR_MESSAGE);
-    }
+            SwingUtilities.invokeLater(() -> {
+                PantallaAsignacion asignacion = new PantallaAsignacion(origen, false); // false = soy cliente
+                asignacion.setSocket(socket);
+                asignacion.setVisible(true);
+                this.setVisible(false);
+            });
 
+        } catch (IOException e) {
+            e.printStackTrace();
+            JOptionPane.showMessageDialog(this, "No se pudo conectar al servidor.");
+        }
+    }).start();
+    
+    
     }//GEN-LAST:event_btnConectarActionPerformed
 
 

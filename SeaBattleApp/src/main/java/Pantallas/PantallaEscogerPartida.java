@@ -12,6 +12,7 @@ import java.net.Socket;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.swing.JOptionPane;
+import javax.swing.SwingUtilities;
 import utilerias.BotonPersonalizado;
 import utilerias.PersonalizacionGeneral;
 
@@ -209,30 +210,46 @@ public class PantallaEscogerPartida extends javax.swing.JFrame {
         
             
         
-        new Thread(() -> {
-            try {
-                ServerSocket servidor = new ServerSocket(5000);
-                System.out.println("Esperando a un jugador...");
-                
-                InetAddress ip = InetAddress.getLocalHost();
-                System.out.println("Tu IP local es: " + ip.getHostAddress());
-                
-                
-                Socket socket = new Socket(ip, 5000);
-                System.out.println("Conexión establecida con el servidor");
-                PantallaAsignacion asi = new PantallaAsignacion(this, socket, true);
-                asi.setVisible(true);
+//        new Thread(() -> {
+//            try {
+//                ServerSocket servidor = new ServerSocket(5000);
+//                System.out.println("Esperando a un jugador...");
+//                
+//                InetAddress ip = InetAddress.getLocalHost();
+//                System.out.println("Tu IP local es: " + ip.getHostAddress());
+//                
+//                
+//                Socket socketCliente = servidor.accept();
+//                System.out.println("Conexión establecida con el servidor");
+//                
+//
+//                PantallaAsignacion asignacion = new PantallaAsignacion(this, socketCliente, true); // true = soy servidor
+//                asignacion.setVisible(true);
+//                this.setVisible(false);
+//
+//
+//            } catch (IOException ex) {
+//                ex.printStackTrace();
+//                JOptionPane.showMessageDialog(this, "Error al crear la sala.", "Error", JOptionPane.ERROR_MESSAGE);
+//            }
+//        }).start();
 
-                System.out.println("Jugador conectado desde " + socket.getInetAddress());
 
-                this.setVisible(false); // oculta la pantalla actual
+        try{
+        ServerSocket servidor = new ServerSocket(5000);
 
-            } catch (IOException ex) {
-                ex.printStackTrace();
-                JOptionPane.showMessageDialog(this, "Error al crear la sala.", "Error", JOptionPane.ERROR_MESSAGE);
-            }
-        }).start();
+        PantallaAsignacion asignacion = new PantallaAsignacion(this, true); // sin socket aún
+        asignacion.setVisible(true);
+        this.setVisible(false);
 
+        // Luego, en la clase PantallaAsignacion, abres un hilo para esperar la conexión
+        asignacion.esperarConexionDelOponente(servidor);
+        
+        }
+        
+        catch(IOException e){
+        
+        }
     }//GEN-LAST:event_btnCrearMouseClicked
 
     private void btnUnirseMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_btnUnirseMouseClicked

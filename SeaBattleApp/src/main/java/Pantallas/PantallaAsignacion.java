@@ -18,10 +18,15 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
+import java.net.InetAddress;
+import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.SocketException;
+import java.net.UnknownHostException;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.swing.*;
 
 /**
@@ -70,16 +75,17 @@ public class PantallaAsignacion extends javax.swing.JFrame {
      *
      * @param escoger
      */
-    public PantallaAsignacion(PantallaEscogerPartida escoger, Socket socket, boolean esServidor) {
+    public PantallaAsignacion(PantallaEscogerPartida escoger, boolean esServidor) {
         initComponents();
 
-        this.socket = socket;
+        this.socket = null;
         this.esServidor = esServidor;
         this.escoger = escoger;
         
         
         if(esServidor == true){
             esJugador1 = true;
+            
         }
 
         cargarInterfaz();
@@ -102,12 +108,127 @@ public class PantallaAsignacion extends javax.swing.JFrame {
         }
         
         
-        jblConfiguracion1.setText("ID partida: " + socket.getInetAddress().getHostAddress());
+        try {
+            jblConfiguracion1.setText("ID partida: " + InetAddress.getLocalHost().getHostAddress());
+            System.out.println(InetAddress.getLocalHost().getHostAddress());
+        } catch (UnknownHostException ex) {
+            Logger.getLogger(PantallaAsignacion.class.getName()).log(Level.SEVERE, null, ex);
+        }
         
         
-        hiloTodosListos();
         
 
+    }
+    
+    public void setSocket(Socket socket) {
+        this.socket = socket;
+        
+//        new Thread(() ->{
+//        try{
+//        PrintWriter out = new PrintWriter(socket.getOutputStream(), true);
+//            BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+//
+//            // Primero envía su nombre
+//            String[] datos = {nombre, colorString};
+//            String mensaje = String.join(";", datos); // "Juan;Rojo;Listo"
+//            out.println(mensaje);
+//            
+//            
+//            // Luego recibe el nombre del jugador 1
+//            String recibido = in.readLine(); // "Juan;Rojo;Listo"
+//            String[] datosRecibidos = recibido.split(";");
+//            
+//            System.out.println("Jugador 1 se llama: " + datosRecibidos[0]);
+//            txtNombreOponente3.setText(datosRecibidos[0]);
+//            
+//            if (datosRecibidos[1].equalsIgnoreCase("0,0,255")){
+//                jPanelColorOponente.setBackground(new Color(0,0,255));
+//                }
+//            
+//                if (datosRecibidos[1].equalsIgnoreCase("51,255,51")){
+//                    jPanelColorOponente.setBackground(new Color(51,255,51));
+//                }
+//
+//
+//                if (datosRecibidos[1].equalsIgnoreCase("204,0,204")){
+//                    jPanelColorOponente.setBackground(new Color(204,0,204));
+//                }
+//
+//                if (datosRecibidos[1].equalsIgnoreCase("0,255,255")){
+//                    jPanelColorOponente.setBackground(new Color(0,255,255));
+//                }
+            
+            
+            
+//        }
+//        catch(IOException e){
+//        
+//        }   
+//    }).start();
+//        
+        System.out.println(socket.getInetAddress().getAddress());
+        jblConfiguracion1.setText("ID partida: " + socket.getInetAddress().getHostAddress());
+        hiloTodosListos(); // ahora sí podemos iniciar el hilo
+    
+        
+}
+    
+    
+    public void esperarConexionDelOponente(ServerSocket serverSocket) {
+        new Thread(() -> {
+            try {
+                System.out.println("Esperando conexión del jugador 2...");
+                this.socket = serverSocket.accept();
+                System.out.println("Jugador 2 conectado desde " + socket.getInetAddress());
+                
+//                BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+//                PrintWriter out = new PrintWriter(socket.getOutputStream(), true);
+//
+//                // Primero recibe el nombre del jugador 2
+//                String recibido = in.readLine();
+//                
+//                String[] datosRecibidos = recibido.split(";");
+//                System.out.println("Jugador 2 se llama: " + datosRecibidos[0]);
+//                txtNombreOponente3.setText(datosRecibidos[0]);
+//                
+//                 if (datosRecibidos[1].equalsIgnoreCase("0,0,255")){
+//                jPanelColorOponente.setBackground(new Color(0,0,255));
+//                }
+//            
+//                if (datosRecibidos[1].equalsIgnoreCase("51,255,51")){
+//                    jPanelColorOponente.setBackground(new Color(51,255,51));
+//                }
+//
+//
+//                if (datosRecibidos[1].equalsIgnoreCase("204,0,204")){
+//                    jPanelColorOponente.setBackground(new Color(204,0,204));
+//                }
+//
+//                if (datosRecibidos[1].equalsIgnoreCase("0,255,255")){
+//                    jPanelColorOponente.setBackground(new Color(0,255,255));
+//                }
+//
+//                // Luego envía su nombre
+//                String[] datos = {nombre, colorString};
+//                String mensaje = String.join(";", datos); // "Juan;Rojo;Listo"
+//                out.println(mensaje);
+                
+                
+                
+              
+                
+                
+                // Ahora que tienes el socket, puedes empezar el hilo de escucha
+                hiloTodosListos();
+
+                SwingUtilities.invokeLater(() -> {
+                    jblConfiguracion1.setText("ID partida: " + socket.getInetAddress().getHostAddress());
+                });
+
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }).start();
     }
 
     private void actualizarContadores() {
@@ -184,7 +305,36 @@ public class PantallaAsignacion extends javax.swing.JFrame {
     private void hiloTodosListos(){
         new Thread(() -> {
         try {
+            System.out.println("Esperando mensaje del oponente...");
+            
             BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+
+            
+//            String recibido = in.readLine(); // "Juan;Rojo;Listo"
+//            String[] datosRecibidos = recibido.split(";");
+//            
+//            System.out.println("Jugador 1 se llama: " + datosRecibidos[0]);
+//            txtNombreOponente3.setText(datosRecibidos[0]);
+//            
+//            if (datosRecibidos[1].equalsIgnoreCase("0,0,255")){
+//                jPanelColorOponente.setBackground(new Color(0,0,255));
+//                }
+//            
+//                if (datosRecibidos[1].equalsIgnoreCase("51,255,51")){
+//                    jPanelColorOponente.setBackground(new Color(51,255,51));
+//                }
+//
+//
+//                if (datosRecibidos[1].equalsIgnoreCase("204,0,204")){
+//                    jPanelColorOponente.setBackground(new Color(204,0,204));
+//                }
+//
+//                if (datosRecibidos[1].equalsIgnoreCase("0,255,255")){
+//                    jPanelColorOponente.setBackground(new Color(0,255,255));
+//                }
+            
+
+
             String mensaje;
             while ((mensaje = in.readLine()) != null) {
                 if (mensaje.equals("LISTO")) {
@@ -418,6 +568,9 @@ public class PantallaAsignacion extends javax.swing.JFrame {
         jPanelHead = new javax.swing.JPanel();
         jblConfiguracion1 = new javax.swing.JLabel();
         btnVolver = new javax.swing.JButton();
+        txtNombreOponente3 = new javax.swing.JLabel();
+        jPanelColorOponente = new javax.swing.JPanel();
+        txtNombreOponente = new javax.swing.JLabel();
         jPanelTiposNaves = new PanelTransparente((float) 0.35);
         jblTiposNave = new javax.swing.JLabel();
         jPanelNombreJugador = new PanelTransparente((float) 0.35);
@@ -468,6 +621,34 @@ public class PantallaAsignacion extends javax.swing.JFrame {
         });
         jPanelHead.add(btnVolver);
         btnVolver.setBounds(21, 14, 120, 35);
+
+        txtNombreOponente3.setFont(new java.awt.Font("Monospaced", 0, 12)); // NOI18N
+        txtNombreOponente3.setForeground(new java.awt.Color(255, 255, 255));
+        txtNombreOponente3.setText("Jugador 2");
+        jPanelHead.add(txtNombreOponente3);
+        txtNombreOponente3.setBounds(750, 10, 190, 20);
+
+        jPanelColorOponente.setPreferredSize(new java.awt.Dimension(30, 30));
+
+        javax.swing.GroupLayout jPanelColorOponenteLayout = new javax.swing.GroupLayout(jPanelColorOponente);
+        jPanelColorOponente.setLayout(jPanelColorOponenteLayout);
+        jPanelColorOponenteLayout.setHorizontalGroup(
+            jPanelColorOponenteLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGap(0, 30, Short.MAX_VALUE)
+        );
+        jPanelColorOponenteLayout.setVerticalGroup(
+            jPanelColorOponenteLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGap(0, 30, Short.MAX_VALUE)
+        );
+
+        jPanelHead.add(jPanelColorOponente);
+        jPanelColorOponente.setBounds(710, 30, 30, 30);
+
+        txtNombreOponente.setFont(new java.awt.Font("Monospaced", 0, 14)); // NOI18N
+        txtNombreOponente.setForeground(new java.awt.Color(255, 255, 255));
+        txtNombreOponente.setText("Sin oponente");
+        jPanelHead.add(txtNombreOponente);
+        txtNombreOponente.setBounds(750, 35, 190, 20);
 
         jPanelFondo.add(jPanelHead);
         jPanelHead.setBounds(0, 0, 950, 70);
@@ -577,6 +758,7 @@ public class PantallaAsignacion extends javax.swing.JFrame {
         btnConfirmar.setBackground(new java.awt.Color(0, 166, 255));
         btnConfirmar.setFont(new java.awt.Font("Monospaced", 1, 14)); // NOI18N
         btnConfirmar.setText("Confirmar");
+        btnConfirmar.setEnabled(false);
         btnConfirmar.setHorizontalTextPosition(javax.swing.SwingConstants.LEADING);
         btnConfirmar.addMouseListener(new java.awt.event.MouseAdapter() {
             public void mouseClicked(java.awt.event.MouseEvent evt) {
@@ -797,17 +979,21 @@ public class PantallaAsignacion extends javax.swing.JFrame {
 
     private void btnConfirmarMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_btnConfirmarMouseClicked
         
-        try {
-            PrintWriter out = new PrintWriter(socket.getOutputStream(), true);
-            out.println("LISTO");
-            yoListo = true;
-            verificarAmbosListos();
+    yoListo = true;
 
+    try {
+        PrintWriter out = new PrintWriter(socket.getOutputStream(), true);
+        out.println("LISTO"); // Envia el mensaje al otro jugador
+        System.out.println("Mensaje 'LISTO' enviado al oponente.");
+        Thread.sleep(100);
+    } catch (IOException ex) {
+        ex.printStackTrace();
+    }   catch (InterruptedException ex) {
+            Logger.getLogger(PantallaAsignacion.class.getName()).log(Level.SEVERE, null, ex);
         }
-        catch (IOException ex) {
-            ex.printStackTrace();
-            JOptionPane.showMessageDialog(this, "Error al enviar confirmación.", "Error", JOptionPane.ERROR_MESSAGE);
-        }
+
+    verificarAmbosListos(); // También verifica desde este lado si ambos están listos
+
 
     }//GEN-LAST:event_btnConfirmarMouseClicked
     private void limpiarTableroGUI() {
@@ -819,11 +1005,6 @@ public class PantallaAsignacion extends javax.swing.JFrame {
         }
     }
 
-    private void abrirPantallaJuego() {
-//        PantallaJuego juego = new PantallaJuego(tableroJugador1, tableroJugador2);
-//        juego.setVisible(true);
-//        this.dispose();
-    }
 
     private boolean validarPosicion(Barco barco, int x, int y) {
         for (int i = 0; i < barco.getTamaño(); i++) {
@@ -912,6 +1093,7 @@ public class PantallaAsignacion extends javax.swing.JFrame {
     private javax.swing.JButton btnConfirmar;
     private javax.swing.JButton btnGirar;
     private javax.swing.JButton btnVolver;
+    private javax.swing.JPanel jPanelColorOponente;
     private javax.swing.JPanel jPanelDerechos;
     private javax.swing.JPanel jPanelEsperando;
     private javax.swing.JPanel jPanelFondo;
@@ -935,6 +1117,8 @@ public class PantallaAsignacion extends javax.swing.JFrame {
     private javax.swing.JLabel txtContadorPortaAviones;
     private javax.swing.JLabel txtContadorSubmarino;
     private javax.swing.JLabel txtCrucero;
+    private javax.swing.JLabel txtNombreOponente;
+    private javax.swing.JLabel txtNombreOponente3;
     private javax.swing.JLabel txtPortaAviones;
     private javax.swing.JLabel txtSubmarino;
     // End of variables declaration//GEN-END:variables
