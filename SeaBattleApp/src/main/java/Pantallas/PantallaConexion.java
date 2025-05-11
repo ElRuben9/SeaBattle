@@ -203,8 +203,9 @@ public class PantallaConexion extends javax.swing.JFrame {
     try {
         Socket socket = new Socket(ip, puerto);
         System.out.println("Conexión establecida con el servidor");
-        PantallaJuego juego = new PantallaJuego(socket, false); // false = jugador cliente
-        juego.setVisible(true);
+        PantallaAsignacion asi = new PantallaAsignacion(origen, socket, false);
+        asi.setVisible(true);
+        
         this.dispose();
     } catch (IOException e) {
         System.out.println("Error al intentar conectar: " + e.getMessage());

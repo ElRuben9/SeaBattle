@@ -1,0 +1,2 @@
+nombre=Juan 2
+color=204,0,204

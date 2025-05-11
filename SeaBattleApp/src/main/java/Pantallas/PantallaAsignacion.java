@@ -10,8 +10,16 @@ import utilerias.PanelTransparente;
 import utilerias.PersonalizacionGeneral;
 import negocio.*;
 import DAOs.JuegoDAO;
+import Pantallas.PantallaJuego;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.io.BufferedReader;
+import java.io.FileReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.PrintWriter;
+import java.net.Socket;
+import java.net.SocketException;
 import java.util.HashMap;
 import java.util.Map;
 import javax.swing.*;
@@ -27,7 +35,7 @@ public class PantallaAsignacion extends javax.swing.JFrame {
     private String orientacionActual = "horizontal"; // horizontal por defecto
     private TipoBarco tipoSeleccionado = TipoBarco.BARCO; // Tipo por defecto (puedes mejorarlo luego)
     private ViewModels.AsignacionViewModel vmAsignacion;
-    private boolean esJugador1 = true; // Empezamos con jugador 1
+    private boolean esJugador1; // Empezamos con jugador 1
     private Tablero tableroJugador1;
     private Tablero tableroJugador2;
     private Barco barcoActual;
@@ -43,22 +51,43 @@ public class PantallaAsignacion extends javax.swing.JFrame {
     );
 
     private final Map<TipoBarco, Integer> colocados = new HashMap<>();
+    
+    
+    private boolean esServidor;
+    private Socket socket;
+    
+    
+    private String nombre, colorString;
+    
+    private Color colorJugador;
+    
+    private boolean yoListo = false;
+    private boolean oponenteListo = false;
+    
 
     /**
      * Creates new form PantallaAsignacion
      *
      * @param escoger
      */
-    public PantallaAsignacion(PantallaEscogerPartida escoger) {
+    public PantallaAsignacion(PantallaEscogerPartida escoger, Socket socket, boolean esServidor) {
         initComponents();
 
+        this.socket = socket;
+        this.esServidor = esServidor;
         this.escoger = escoger;
+        
+        
+        if(esServidor == true){
+            esJugador1 = true;
+        }
 
         cargarInterfaz();
         tableroJugador = new Tablero();
         for (TipoBarco tipo : TipoBarco.values()) {
             colocados.put(tipo, 0); // Todos inician con 0 colocados
         }
+        
         actualizarContadores();
         for (TipoBarco tipo : TipoBarco.values()) {
             JButton btnTipo = new JButton(tipo.name()); // Puedes personalizar el nombre con .toString() si prefieres
@@ -71,6 +100,13 @@ public class PantallaAsignacion extends javax.swing.JFrame {
                 }
             });
         }
+        
+        
+        jblConfiguracion1.setText("ID partida: " + socket.getInetAddress().getHostAddress());
+        
+        
+        hiloTodosListos();
+        
 
     }
 
@@ -91,8 +127,82 @@ public class PantallaAsignacion extends javax.swing.JFrame {
         crearTablero();
         btnConfirmar.setEnabled(false);
         btnConfirmar.setVisible(false);
+        
+        cargarDatosUsuario();
 
     }
+    
+    private void cargarDatosUsuario(){
+    
+            try (BufferedReader reader = new BufferedReader(new FileReader("jugador.txt"))) {
+            String linea;
+            while ((linea = reader.readLine()) != null) {
+                String[] partes = linea.split("=");
+                if (partes.length == 2) {
+                    if (partes[0].equals("nombre")) {
+                        nombre = partes[1];
+                    } else if (partes[0].equals("color")) {
+                        colorString = partes[1];
+                    }
+                }
+            }
+            System.out.println("Nombre: " + nombre);
+            System.out.println("Color: " + colorString);
+            
+            jblNombreJugador.setText("Tablero de: " + nombre);
+            
+            
+            
+            if (colorString.equalsIgnoreCase("0,0,255")){
+                colorJugador = new Color(0, 0, 255);
+            }
+            
+            if (colorString.equalsIgnoreCase("51,255,51")){
+                colorJugador = new Color(51, 255, 51);
+            }
+                        
+                        
+            if (colorString.equalsIgnoreCase("204,0,204")){
+                colorJugador = new Color(204, 0, 204);
+            }
+            
+            if (colorString.equalsIgnoreCase("0,255,255")){
+                colorJugador = new Color(0, 255, 255);
+            }
+            
+            
+            
+            
+            
+        } catch (IOException e) {
+            System.out.println("Error al leer el archivo: " + e.getMessage());
+        }
+    }
+    
+    
+    
+    private void hiloTodosListos(){
+        new Thread(() -> {
+        try {
+            BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+            String mensaje;
+            while ((mensaje = in.readLine()) != null) {
+                if (mensaje.equals("LISTO")) {
+                    oponenteListo = true;
+                    System.out.println("jugador 2 listo");
+                    verificarAmbosListos();
+                    break;
+                }
+            }
+        } catch (SocketException e) {
+            System.out.println("Conexión cerrada por el otro jugador: " + e.getMessage());
+        } catch (IOException e) {
+            System.out.println("Error en la comunicación: " + e.getMessage());
+        }
+    }).start();
+
+    }
+    
 
     private void colocarBarco(int x, int y) {
         
@@ -129,12 +239,12 @@ public class PantallaAsignacion extends javax.swing.JFrame {
         }
         
         for(int i = 0; i < barcoActual.getTamaño(); i++){
-            if(orientacionActual.equals("horizontal") && botonesTablero[x + i][y].getBackground().equals(Color.GRAY)){
+            if(orientacionActual.equals("horizontal") && botonesTablero[x + i][y].getBackground().equals(colorJugador)){
                 JOptionPane.showMessageDialog(this, "El espacio ya esta ocupado", "Error", JOptionPane.ERROR_MESSAGE);
                 return;
             }
             
-            if(orientacionActual.equals("vertical") && botonesTablero[x][y + i].getBackground().equals(Color.GRAY)){
+            if(orientacionActual.equals("vertical") && botonesTablero[x][y + i].getBackground().equals(colorJugador)){
                 JOptionPane.showMessageDialog(this, "El espacio ya esta ocupado", "Error", JOptionPane.ERROR_MESSAGE);
                 return;
             }
@@ -151,9 +261,9 @@ public class PantallaAsignacion extends javax.swing.JFrame {
             // Pintar las celdas
             for (int i = 0; i < barcoActual.getTamaño(); i++) {
                 if (orientacionActual.equals("horizontal")) {
-                    botonesTablero[x + i][y].setBackground(Color.GRAY);
+                    botonesTablero[x + i][y].setBackground(colorJugador);
                 } else {
-                    botonesTablero[x][y + i].setBackground(Color.GRAY);
+                    botonesTablero[x][y + i].setBackground(colorJugador);
                 }
             }
         } else {
@@ -165,6 +275,10 @@ public class PantallaAsignacion extends javax.swing.JFrame {
 
         btnConfirmar.setEnabled(todosListos);  // Habilita el botón solo si todo está listo
         btnConfirmar.setVisible(todosListos);
+        
+        
+        
+        
     }
 
     // Suponiendo que ya tienes los objetos barcoActual y tableroJugador
@@ -206,13 +320,13 @@ public class PantallaAsignacion extends javax.swing.JFrame {
                     for (int i = 0; i < barcoActual.getTamaño(); i++) {
                         try{    
                             if (orientacionActual.equals("horizontal")) {
-                                if(botonesTablero[x + i][y].getBackground().equals(Color.GRAY)){
+                                if(botonesTablero[x + i][y].getBackground().equals(colorJugador)){
                                     return;
                                 }
                                 botonesTablero[x + i][y].setBackground(Color.LIGHT_GRAY);
 
                             } else {
-                                if(botonesTablero[x][y + i].getBackground().equals(Color.GRAY)){
+                                if(botonesTablero[x][y + i].getBackground().equals(colorJugador)){
                                     return;
                                 }
                                 botonesTablero[x][y + i].setBackground(Color.LIGHT_GRAY);
@@ -241,13 +355,13 @@ public class PantallaAsignacion extends javax.swing.JFrame {
                     for (int i = 0; i < barcoActual.getTamaño(); i++) {
                         try{    
                             if (orientacionActual.equals("horizontal")) {
-                                if(botonesTablero[x + i][y].getBackground().equals(Color.GRAY)){
+                                if(botonesTablero[x + i][y].getBackground().equals(colorJugador)){
                                     return;
                                 }
                                 botonesTablero[x + i][y].setBackground(new Color(173, 216, 230));
 
                             } else {
-                                if(botonesTablero[x][y + i].getBackground().equals(Color.GRAY)){
+                                if(botonesTablero[x][y + i].getBackground().equals(colorJugador)){
                                     return;
                                 }
                                 botonesTablero[x][y + i].setBackground(new Color(173, 216, 230));
@@ -356,7 +470,7 @@ public class PantallaAsignacion extends javax.swing.JFrame {
         btnVolver.setBounds(21, 14, 120, 35);
 
         jPanelFondo.add(jPanelHead);
-        jPanelHead.setBounds(0, 0, 0, 0);
+        jPanelHead.setBounds(0, 0, 950, 70);
 
         jPanelTiposNaves.setBackground(new java.awt.Color(255, 255, 255));
 
@@ -682,16 +796,19 @@ public class PantallaAsignacion extends javax.swing.JFrame {
     }// </editor-fold>//GEN-END:initComponents
 
     private void btnConfirmarMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_btnConfirmarMouseClicked
-        if (esJugador1) {
-            tableroJugador1 = vmAsignacion.getTablero(); // Guarda el tablero de jugador 1
-            esJugador1 = false; // Cambia al jugador 2
-            vmAsignacion = new ViewModels.AsignacionViewModel(); // Nuevo tablero para jugador 2
-            limpiarTableroGUI();
-            JOptionPane.showMessageDialog(this, "Turno del Jugador 2: Coloca tus barcos.");
-        } else {
-            tableroJugador2 = vmAsignacion.getTablero(); // Guarda el tablero de jugador 2
-            abrirPantallaJuego(); // Iniciar la partida
+        
+        try {
+            PrintWriter out = new PrintWriter(socket.getOutputStream(), true);
+            out.println("LISTO");
+            yoListo = true;
+            verificarAmbosListos();
+
         }
+        catch (IOException ex) {
+            ex.printStackTrace();
+            JOptionPane.showMessageDialog(this, "Error al enviar confirmación.", "Error", JOptionPane.ERROR_MESSAGE);
+        }
+
     }//GEN-LAST:event_btnConfirmarMouseClicked
     private void limpiarTableroGUI() {
         for (int i = 0; i < 10; i++) {
@@ -703,9 +820,9 @@ public class PantallaAsignacion extends javax.swing.JFrame {
     }
 
     private void abrirPantallaJuego() {
-        PantallaJuego juego = new PantallaJuego(tableroJugador1, tableroJugador2);
-        juego.setVisible(true);
-        this.dispose();
+//        PantallaJuego juego = new PantallaJuego(tableroJugador1, tableroJugador2);
+//        juego.setVisible(true);
+//        this.dispose();
     }
 
     private boolean validarPosicion(Barco barco, int x, int y) {
@@ -771,8 +888,21 @@ public class PantallaAsignacion extends javax.swing.JFrame {
         } else {
             JOptionPane.showMessageDialog(this, "Ya colocaste todos los Cruceros.");
         }
+    }
         
         
+    private void verificarAmbosListos() {
+        if (yoListo && oponenteListo) {
+//            // Aquí va la lógica que quieres ejecutar cuando ambos estén listos
+//            SwingUtilities.invokeLater(() -> {
+//                JOptionPane.showMessageDialog(this, "¡Ambos jugadores están listos!");
+//                // Ejemplo: abrir la pantalla de juego
+                PantallaJuego juego = new PantallaJuego(socket, esServidor);
+                juego.setVisible(true);
+                this.setVisible(false);
+//            });
+            System.out.println("ambos listos");
+        }
         
         
     }//GEN-LAST:event_seleccionarCruceroActionPerformed

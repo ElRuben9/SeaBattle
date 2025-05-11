@@ -5,6 +5,14 @@
 package Pantallas;
 
 import java.awt.Color;
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
+import java.io.IOException;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import javax.swing.JOptionPane;
 import utilerias.BotonPersonalizado;
 import utilerias.PersonalizacionGeneral;
 
@@ -16,6 +24,7 @@ public class PantallaPrincipal extends javax.swing.JFrame {
 
     
     String fondo = "recursos/interfaz/fondoPantallaInicial.png";
+    
     
     
     /**
@@ -59,12 +68,63 @@ public class PantallaPrincipal extends javax.swing.JFrame {
         btnSalir.setOpaque(false);
         btnSalir.setUI(new BotonPersonalizado(25, new Color(0, 166, 255), new Color(82, 250, 255) ,3));
         
+        cargarDatosUsuario();
+        
     }
     
+    private void cargarDatosUsuario(){
     
-    
-    
-    
+        String colorString = "";
+            
+            if(new File("jugador.txt").exists()){
+            
+                try (BufferedReader reader = new BufferedReader(new FileReader("jugador.txt"))) {
+                    String linea;
+                    while ((linea = reader.readLine()) != null) {
+                        String[] partes = linea.split("=");
+                        if (partes.length == 2) {
+                            if (partes[0].equals("nombre")) {
+                                //nombre = partes[1];
+                                jblNombreUsuario.setText(partes[1]);
+                            } else if (partes[0].equals("color")) {
+                                colorString = partes[1];
+                            }
+                        }
+                    }
+                    
+                    
+                 if (colorString.equalsIgnoreCase("0,0,255")){
+                jPanelColor.setBackground(new Color(0,0,255));
+                }
+            
+                if (colorString.equalsIgnoreCase("51,255,51")){
+                    jPanelColor.setBackground(new Color(51,255,51));
+                }
+
+
+                if (colorString.equalsIgnoreCase("204,0,204")){
+                    jPanelColor.setBackground(new Color(204,0,204));
+                }
+
+                if (colorString.equalsIgnoreCase("0,255,255")){
+                    jPanelColor.setBackground(new Color(0,255,255));
+                }
+
+
+            } 
+                  
+            catch (FileNotFoundException ex) {
+                Logger.getLogger(PantallaPrincipal.class.getName()).log(Level.SEVERE, null, ex);
+                }
+            catch (IOException ex) {
+                Logger.getLogger(PantallaPrincipal.class.getName()).log(Level.SEVERE, null, ex);
+                }
+            }
+            else{
+            
+            }
+        
+        }
     
     /**
      * This method is called from within the constructor to initialize the form.
@@ -77,6 +137,8 @@ public class PantallaPrincipal extends javax.swing.JFrame {
 
         jPanelFondo = new javax.swing.JPanel();
         jPanelDerechos = new javax.swing.JPanel();
+        jPanelColor = new javax.swing.JPanel();
+        jblNombreUsuario = new javax.swing.JLabel();
         jblDerechos = new javax.swing.JLabel();
         btnSalir = new javax.swing.JButton();
         btnJugar = new javax.swing.JButton();
@@ -87,10 +149,34 @@ public class PantallaPrincipal extends javax.swing.JFrame {
         setTitle("Batalla Naval");
         setMinimumSize(new java.awt.Dimension(950, 600));
         setSize(new java.awt.Dimension(950, 600));
+        addWindowFocusListener(new java.awt.event.WindowFocusListener() {
+            public void windowGainedFocus(java.awt.event.WindowEvent evt) {
+                formWindowGainedFocus(evt);
+            }
+            public void windowLostFocus(java.awt.event.WindowEvent evt) {
+            }
+        });
 
         jPanelFondo.setLayout(null);
 
         jPanelDerechos.setBackground(new java.awt.Color(13, 26, 51));
+
+        jPanelColor.setPreferredSize(new java.awt.Dimension(25, 25));
+
+        javax.swing.GroupLayout jPanelColorLayout = new javax.swing.GroupLayout(jPanelColor);
+        jPanelColor.setLayout(jPanelColorLayout);
+        jPanelColorLayout.setHorizontalGroup(
+            jPanelColorLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGap(0, 36, Short.MAX_VALUE)
+        );
+        jPanelColorLayout.setVerticalGroup(
+            jPanelColorLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGap(0, 0, Short.MAX_VALUE)
+        );
+
+        jblNombreUsuario.setFont(new java.awt.Font("Monospaced", 1, 18)); // NOI18N
+        jblNombreUsuario.setForeground(new java.awt.Color(255, 255, 255));
+        jblNombreUsuario.setText("Usuario No Configurado");
 
         jblDerechos.setFont(new java.awt.Font("Segoe UI", 0, 14)); // NOI18N
         jblDerechos.setForeground(new java.awt.Color(255, 255, 255));
@@ -103,12 +189,24 @@ public class PantallaPrincipal extends javax.swing.JFrame {
             jPanelDerechosLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(jPanelDerechosLayout.createSequentialGroup()
                 .addContainerGap()
-                .addComponent(jblDerechos, javax.swing.GroupLayout.DEFAULT_SIZE, 938, Short.MAX_VALUE)
+                .addComponent(jPanelColor, javax.swing.GroupLayout.PREFERRED_SIZE, 36, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addComponent(jblNombreUsuario)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 294, Short.MAX_VALUE)
+                .addComponent(jblDerechos, javax.swing.GroupLayout.PREFERRED_SIZE, 356, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addContainerGap())
         );
         jPanelDerechosLayout.setVerticalGroup(
             jPanelDerechosLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addComponent(jblDerechos, javax.swing.GroupLayout.DEFAULT_SIZE, 50, Short.MAX_VALUE)
+            .addGroup(jPanelDerechosLayout.createSequentialGroup()
+                .addComponent(jblDerechos, javax.swing.GroupLayout.PREFERRED_SIZE, 50, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addGap(0, 0, Short.MAX_VALUE))
+            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanelDerechosLayout.createSequentialGroup()
+                .addContainerGap()
+                .addGroup(jPanelDerechosLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addComponent(jblNombreUsuario, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                    .addComponent(jPanelColor, javax.swing.GroupLayout.DEFAULT_SIZE, 38, Short.MAX_VALUE))
+                .addContainerGap())
         );
 
         jPanelFondo.add(jPanelDerechos);
@@ -173,9 +271,18 @@ public class PantallaPrincipal extends javax.swing.JFrame {
     private void btnJugarMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_btnJugarMouseClicked
         // TODO add your handling code here:
         
-        PantallaEscogerPartida partida = new PantallaEscogerPartida(this);
-        partida.setVisible(true);
-        this.setVisible(false);
+        if(new File("jugador.txt").exists()){
+                
+            PantallaEscogerPartida partida = new PantallaEscogerPartida(this);
+            partida.setVisible(true);
+            this.setVisible(false);
+        }  
+        
+        else{
+            JOptionPane.showMessageDialog(this, "Debe configurar su nombre de usuario y color", "Error", JOptionPane.ERROR_MESSAGE);
+        }
+        
+
     }//GEN-LAST:event_btnJugarMouseClicked
 
     private void btnOpcionesMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_btnOpcionesMouseClicked
@@ -186,6 +293,12 @@ public class PantallaPrincipal extends javax.swing.JFrame {
         
         this.setVisible(false);
     }//GEN-LAST:event_btnOpcionesMouseClicked
+
+    private void formWindowGainedFocus(java.awt.event.WindowEvent evt) {//GEN-FIRST:event_formWindowGainedFocus
+        // TODO add your handling code here:
+        cargarDatosUsuario();
+        
+    }//GEN-LAST:event_formWindowGainedFocus
 
     /**
      * @param args the command line arguments
@@ -226,9 +339,11 @@ public class PantallaPrincipal extends javax.swing.JFrame {
     private javax.swing.JButton btnJugar;
     private javax.swing.JButton btnOpciones;
     private javax.swing.JButton btnSalir;
+    private javax.swing.JPanel jPanelColor;
     private javax.swing.JPanel jPanelDerechos;
     private javax.swing.JPanel jPanelFondo;
     private javax.swing.JLabel jblDerechos;
     private javax.swing.JLabel jblFondo;
+    private javax.swing.JLabel jblNombreUsuario;
     // End of variables declaration//GEN-END:variables
 }

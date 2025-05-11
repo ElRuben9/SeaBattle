@@ -6,6 +6,7 @@ package Pantallas;
 
 import java.awt.Color;
 import java.io.IOException;
+import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.logging.Level;
@@ -205,17 +206,25 @@ public class PantallaEscogerPartida extends javax.swing.JFrame {
     }//GEN-LAST:event_btnVolverMouseClicked
 
     private void btnCrearMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_btnCrearMouseClicked
+        
+            
+        
         new Thread(() -> {
             try {
                 ServerSocket servidor = new ServerSocket(5000);
                 System.out.println("Esperando a un jugador...");
+                
+                InetAddress ip = InetAddress.getLocalHost();
+                System.out.println("Tu IP local es: " + ip.getHostAddress());
+                
+                
+                Socket socket = new Socket(ip, 5000);
+                System.out.println("Conexión establecida con el servidor");
+                PantallaAsignacion asi = new PantallaAsignacion(this, socket, true);
+                asi.setVisible(true);
 
-                Socket socket = servidor.accept();
                 System.out.println("Jugador conectado desde " + socket.getInetAddress());
 
-                // Iniciar juego como servidor
-                PantallaJuego juego = new PantallaJuego(socket, true);
-                juego.setVisible(true);
                 this.setVisible(false); // oculta la pantalla actual
 
             } catch (IOException ex) {

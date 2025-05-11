@@ -5,10 +5,14 @@
 package Pantallas;
 
 import java.awt.Color;
+import java.io.BufferedReader;
+import java.io.FileReader;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.swing.BorderFactory;
+import javax.swing.JOptionPane;
 import javax.swing.border.Border;
 import utilerias.BotonPersonalizado;
 import utilerias.PanelTransparente;
@@ -28,6 +32,10 @@ public class PantallaConfiguracion extends javax.swing.JFrame {
     Border bordeSeleccion = BorderFactory.createMatteBorder(7,7,7,7, Color.ORANGE);
     
     String seleccion = "";
+    
+    Color color;
+    String nombre, colorString;
+    
     
     
     PantallaPrincipal inicio;
@@ -55,11 +63,63 @@ public class PantallaConfiguracion extends javax.swing.JFrame {
             
             PersonalizacionGeneral.colocarImagenDesenfocadaLabel(jblFondo, fondo, 12);
             personazilarBotones();
+            cargarDatosUsuario();
         }
         catch (IOException ex) {
             Logger.getLogger(PantallaConfiguracion.class.getName()).log(Level.SEVERE, null, ex);
         }
         
+    }
+    
+    
+    private void cargarDatosUsuario(){
+    
+            try (BufferedReader reader = new BufferedReader(new FileReader("jugador.txt"))) {
+            String linea;
+            while ((linea = reader.readLine()) != null) {
+                String[] partes = linea.split("=");
+                if (partes.length == 2) {
+                    if (partes[0].equals("nombre")) {
+                        nombre = partes[1];
+                    } else if (partes[0].equals("color")) {
+                        colorString = partes[1];
+                    }
+                }
+            }
+            System.out.println("Nombre: " + nombre);
+            txtUsuario.setText(nombre);
+            
+            if (colorString.equalsIgnoreCase("0,0,255")){
+                color = jPanelColor1.getBackground();
+                seleccion = "color1";
+                decorarColor();
+                
+                System.out.println("ese");
+            }
+            
+            if (colorString.equalsIgnoreCase("51,255,51")){
+                color = jPanelColor2.getBackground();
+                seleccion = "color2";
+                decorarColor();
+            }
+                        
+                        
+            if (colorString.equalsIgnoreCase("204,0,204")){
+                color = jPanelColor3.getBackground();
+                seleccion = "color3";
+                decorarColor();
+            }
+            
+            if (colorString.equalsIgnoreCase("0,255,255")){
+                color = jPanelColor4.getBackground();
+                seleccion = "color4";
+                decorarColor();
+            }
+            
+            
+        } catch (IOException e) {
+            System.out.println("Error al leer el archivo: " + e.getMessage());
+        }
     }
     
     
@@ -114,7 +174,7 @@ public class PantallaConfiguracion extends javax.swing.JFrame {
         jPanelColor2 = new javax.swing.JPanel();
         jPanelColor3 = new javax.swing.JPanel();
         jPanelColor4 = new javax.swing.JPanel();
-        jTextField1 = new javax.swing.JTextField();
+        txtUsuario = new javax.swing.JTextField();
         jLabel1 = new javax.swing.JLabel();
         jLabel2 = new javax.swing.JLabel();
         btnVolver = new javax.swing.JButton();
@@ -157,7 +217,7 @@ public class PantallaConfiguracion extends javax.swing.JFrame {
         );
 
         jPanelFondo.add(jPanelHead);
-        jPanelHead.setBounds(0, 0, 0, 0);
+        jPanelHead.setBounds(0, 0, 950, 60);
 
         jPanelConfiguracion.setBorder(javax.swing.BorderFactory.createLineBorder(new java.awt.Color(0, 0, 0)));
 
@@ -297,8 +357,8 @@ public class PantallaConfiguracion extends javax.swing.JFrame {
                     .addContainerGap(19, Short.MAX_VALUE)))
         );
 
-        jTextField1.setFont(new java.awt.Font("Monospaced", 1, 18)); // NOI18N
-        jTextField1.setText("Jack Sparrow");
+        txtUsuario.setFont(new java.awt.Font("Monospaced", 1, 18)); // NOI18N
+        txtUsuario.setText("Jack Sparrow");
 
         jLabel1.setFont(new java.awt.Font("Monospaced", 1, 36)); // NOI18N
         jLabel1.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
@@ -320,7 +380,7 @@ public class PantallaConfiguracion extends javax.swing.JFrame {
                 .addGap(87, 87, 87)
                 .addComponent(jLabel1, javax.swing.GroupLayout.PREFERRED_SIZE, 219, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                .addComponent(jTextField1, javax.swing.GroupLayout.PREFERRED_SIZE, 269, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addComponent(txtUsuario, javax.swing.GroupLayout.PREFERRED_SIZE, 269, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addGap(92, 92, 92))
             .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanelConfiguracionLayout.createSequentialGroup()
                 .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
@@ -333,7 +393,7 @@ public class PantallaConfiguracion extends javax.swing.JFrame {
                 .addGap(55, 55, 55)
                 .addGroup(jPanelConfiguracionLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addComponent(jLabel1, javax.swing.GroupLayout.PREFERRED_SIZE, 50, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(jTextField1, javax.swing.GroupLayout.PREFERRED_SIZE, 50, javax.swing.GroupLayout.PREFERRED_SIZE))
+                    .addComponent(txtUsuario, javax.swing.GroupLayout.PREFERRED_SIZE, 50, javax.swing.GroupLayout.PREFERRED_SIZE))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 20, Short.MAX_VALUE)
                 .addComponent(jLabel2, javax.swing.GroupLayout.PREFERRED_SIZE, 50, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
@@ -398,6 +458,42 @@ public class PantallaConfiguracion extends javax.swing.JFrame {
 
     private void btnGuardarMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_btnGuardarMouseClicked
         // TODO add your handling code here:
+        
+        nombre = txtUsuario.getText();
+        
+        if(nombre.isBlank()){
+            JOptionPane.showMessageDialog(this, "No puede estar el campo vacio", "Error", JOptionPane.ERROR_MESSAGE);
+        }
+        
+        if(color == null){
+            JOptionPane.showMessageDialog(this, "Debe seleccionar un color", "Error", JOptionPane.ERROR_MESSAGE);
+        }
+        
+        else{
+            JOptionPane.showMessageDialog(this, "Datos guardados", "Mensaje", JOptionPane.DEFAULT_OPTION);
+            
+            
+            System.out.println(color.getRGB());
+            
+            String colorString = color.getRed() + "," + color.getGreen() + "," + color.getBlue();
+
+        try (FileWriter writer = new FileWriter("jugador.txt")) {
+            
+            writer.write("nombre=" + nombre + "\n");
+            writer.write("color=" + colorString + "\n");
+            System.out.println("Datos guardados correctamente.");
+            
+            inicio.setVisible(true);
+            this.dispose();
+            
+        } catch (IOException e) {
+            System.out.println("Error al guardar: " + e.getMessage());
+        }
+    
+            
+            
+        }
+        
     }//GEN-LAST:event_btnGuardarMouseClicked
 
     private void btnVolverActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnVolverActionPerformed
@@ -423,6 +519,8 @@ public class PantallaConfiguracion extends javax.swing.JFrame {
         seleccion = "color1";
         decorarColor();
         
+        color = jPanelColor1.getBackground();
+        
     }//GEN-LAST:event_jPanelColor1MouseClicked
 
     private void jPanelColor2MouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_jPanelColor2MouseClicked
@@ -430,6 +528,8 @@ public class PantallaConfiguracion extends javax.swing.JFrame {
         
         seleccion = "color2";
         decorarColor();
+        
+        color = jPanelColor2.getBackground();
     }//GEN-LAST:event_jPanelColor2MouseClicked
 
     private void jPanelColor2MouseEntered(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_jPanelColor2MouseEntered
@@ -451,6 +551,8 @@ public class PantallaConfiguracion extends javax.swing.JFrame {
         seleccion = "color3";
         decorarColor();
         
+        color = jPanelColor3.getBackground();
+        
     }//GEN-LAST:event_jPanelColor3MouseClicked
 
     private void jPanelColor3MouseEntered(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_jPanelColor3MouseEntered
@@ -469,6 +571,8 @@ public class PantallaConfiguracion extends javax.swing.JFrame {
         
         seleccion = "color4";
         decorarColor();
+        
+        color = jPanelColor4.getBackground();
     }//GEN-LAST:event_jPanelColor4MouseClicked
 
     private void jPanelColor4MouseEntered(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_jPanelColor4MouseEntered
@@ -548,8 +652,8 @@ public class PantallaConfiguracion extends javax.swing.JFrame {
     private javax.swing.JPanel jPanelConfiguracion;
     private javax.swing.JPanel jPanelFondo;
     private javax.swing.JPanel jPanelHead;
-    private javax.swing.JTextField jTextField1;
     private javax.swing.JLabel jblConfiguracion;
     private javax.swing.JLabel jblFondo;
+    private javax.swing.JTextField txtUsuario;
     // End of variables declaration//GEN-END:variables
 }

@@ -39,12 +39,12 @@
         </dependency>
         <dependency>
             <groupId>${project.groupId}</groupId>
-            <artifactId>SeaBattleModel</artifactId>
+            <artifactId>SeaBattleData</artifactId>
             <version>${project.version}</version>
         </dependency>
         <dependency>
             <groupId>${project.groupId}</groupId>
-            <artifactId>SeaBattleData</artifactId>
+            <artifactId>SeaBattleModel</artifactId>
             <version>${project.version}</version>
         </dependency>
     </dependencies>

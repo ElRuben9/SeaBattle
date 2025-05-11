@@ -64,8 +64,8 @@ public class PantallaJuego extends javax.swing.JFrame {
 
     private void inicializarComunicacion() {
         try {
-            entrada = new BufferedReader(new InputStreamReader(socket.getInputStream()));
-            salida = new PrintWriter(socket.getOutputStream(), true);
+            in = new DataInputStream(socket.getInputStream());
+            out = new DataOutputStream(socket.getOutputStream());
 
             // Puedes iniciar un hilo para escuchar mensajes entrantes
             new Thread(() -> {
