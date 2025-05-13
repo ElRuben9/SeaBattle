@@ -48,6 +48,10 @@ public class PantallaJuego extends javax.swing.JFrame {
     private Tablero tableroEnemigo;
 
     String fondo = "recursos/interfaz/fondoColocarBarcos.png";
+    
+    
+    private int xSeleccionado = -1;
+    private int ySeleccionado = -1;
 
     /**
      * Creates new form PantallaJuego
@@ -55,20 +59,36 @@ public class PantallaJuego extends javax.swing.JFrame {
     public PantallaJuego(Socket socket, boolean esServidor, Tablero tableroJugador, Tablero tableroDelOponente) {
         this.socket = socket;
         this.esServidor = esServidor;
-         setLayout(new GridLayout(1, 2)); 
-        JPanel panelJugador = crearTablero(botonesTableroJugador, false);
-        JPanel panelEnemigo = crearTablero(botonesTableroEnemigo, true);
+        // setLayout(new GridLayout(1, 2)); 
      
         initComponents();
            
        
         this.tableroEnemigo = tableroDelOponente;
         this.tableroJugador = tableroJugador;
+        
+        cargarDatos();
+
+    }
+    
+    
+    private void cargarDatos(){
+        
+        personazilarBotones();
+        
+        JPanel panelJugador = crearTablero(botonesTableroJugador, false);
+        JPanel panelEnemigo = crearTablero(botonesTableroEnemigo, true);
       
         
-        add(panelJugador);
-        add(panelEnemigo);
+        panelJugador.setBounds(jPanel1.getBounds());
+        panelEnemigo.setBounds(jPanel2.getBounds());
+        
+        // el 0 es la prioridad al mostrarse
+        jPanelFondo.add(panelJugador, 0);
+        jPanelFondo.add(panelEnemigo, 0);
 
+        jPanelFondo.repaint();
+        
         pack();
         setLocationRelativeTo(null);
         setVisible(true);
@@ -80,8 +100,17 @@ public class PantallaJuego extends javax.swing.JFrame {
         } else {
             setTitle("Cliente - Batalla Naval");
         }
-
+        
+        
+        if(esServidor){
+            esMiTurno = true;
+        }
+        
+        mostrarBarcosEnTablero();
+        
+    
     }
+    
 
     private void mostrarBarcosEnTablero() {
         for (int i = 0; i < 10; i++) {
@@ -95,21 +124,32 @@ public class PantallaJuego extends javax.swing.JFrame {
 
     private JPanel crearTablero(JButton[][] botones, boolean esTableroEnemigo) {
         JPanel panel = new JPanel(new GridLayout(10, 10));
-        panel.setPreferredSize(new Dimension(400, 400));  // Tamaño del tablero
+        
+        if(esTableroEnemigo){
+            panel.setBounds(jPanel2.getBounds());
+        }
+        else{
+            panel.setBounds(jPanel1.getBounds());
+        }
+       // panel.setPreferredSize(new Dimension(400, 400));  // Tamaño del tablero
         for (int x = 0; x < 10; x++) {
             for (int y = 0; y < 10; y++) {
                 JButton boton = new JButton();
                 boton.setPreferredSize(new Dimension(40, 40)); // Tamaño de cada celda
-                boton.setBackground(Color.CYAN);
+                boton.setBackground(Color.GRAY);
                 if (esTableroEnemigo) {
+                    boton.setBackground(Color.LIGHT_GRAY);
                     int finalX = x, finalY = y;
                     boton.addActionListener(e -> {
-                        if (esMiTurno) {
-                            disparar(finalX, finalY);
-                        } else {
-                            JOptionPane.showMessageDialog(this, "¡No es tu turno!");
-                        }
-                    });
+                        
+                        limpiarSeleccionAnterior();
+
+                        xSeleccionado = finalX;
+                        ySeleccionado = finalY;
+                        System.out.println(finalX);
+                        // Opcional: resaltar visualmente la celda seleccionada
+                        botonesTableroEnemigo[finalX][finalY].setBackground(Color.YELLOW);
+                        });
                 }
                 botones[x][y] = boton;
                 panel.add(boton);
@@ -284,27 +324,51 @@ public class PantallaJuego extends javax.swing.JFrame {
     }
 
     private void crearTableroJugador2() {
-        JPanel panelGrid = new JPanel(new java.awt.GridLayout(10, 10));
-        panelGrid.setBounds(540, 140, 390, 325);
-        panelGrid.setOpaque(false);
+    JPanel panelGrid = new JPanel(new java.awt.GridLayout(10, 10));
+    panelGrid.setBounds(540, 140, 390, 325);
+    panelGrid.setOpaque(false);
 
-        for (int i = 0; i < 10; i++) {
-            for (int j = 0; j < 10; j++) {
-                JButton boton = new JButton();
-                boton.setBackground(new Color(173, 216, 230));
-                boton.setFocusPainted(false);
-                int x = i;
-                int y = j;
+    for (int i = 0; i < 10; i++) {
+        for (int j = 0; j < 10; j++) {
+            JButton boton = new JButton();
+            boton.setBackground(new Color(173, 216, 230));
+            boton.setFocusPainted(false);
+            int x = i;
+            int y = j;
 
-                boton.addActionListener(e -> disparar(x, y));
+            boton.addActionListener(e -> {
+                if (esMiTurno && boton.isEnabled()) {
+                    // Limpiar selección previa
+                    limpiarSeleccionAnterior();
 
-                botonesTableroEnemigo[i][j] = boton;
-                panelGrid.add(boton);
+                    // Guardar la nueva selección
+                    xSeleccionado = x;
+                    ySeleccionado = y;
+
+                    // Marcar visualmente la celda seleccionada
+                    botonesTableroEnemigo[x][y].setBackground(Color.YELLOW);
+                }
+            });
+
+            botonesTableroEnemigo[i][j] = boton;
+            panelGrid.add(boton);
+        }
+    }
+
+    this.getContentPane().add(panelGrid, 0);
+}
+
+    
+    
+    private void limpiarSeleccionAnterior() {
+    for (int i = 0; i < 10; i++) {
+        for (int j = 0; j < 10; j++) {
+            if (botonesTableroEnemigo[i][j].getBackground().equals(Color.YELLOW)) {
+                botonesTableroEnemigo[i][j].setBackground(new Color(173, 216, 230));
             }
         }
-
-        this.getContentPane().add(panelGrid, 0);
     }
+}
 
     private void disparar(int x, int y) {
         try {
@@ -347,6 +411,8 @@ public class PantallaJuego extends javax.swing.JFrame {
         jPanelDerechos = new javax.swing.JPanel();
         jblDerechos = new javax.swing.JLabel();
         btnAtacar = new javax.swing.JButton();
+        jPanel1 = new javax.swing.JPanel();
+        jPanel2 = new javax.swing.JPanel();
         jblFondo = new javax.swing.JLabel();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
@@ -382,7 +448,7 @@ public class PantallaJuego extends javax.swing.JFrame {
         jblTiempo.setBounds(857, 7, 75, 47);
 
         jPanelFondo.add(jPanelHead);
-        jPanelHead.setBounds(0, 0, 0, 0);
+        jPanelHead.setBounds(0, 0, 950, 70);
 
         jPanelNombreJugador2.setBackground(new java.awt.Color(255, 255, 255));
         jPanelNombreJugador2.setMinimumSize(new java.awt.Dimension(390, 32));
@@ -472,6 +538,34 @@ public class PantallaJuego extends javax.swing.JFrame {
         jPanelFondo.add(btnAtacar);
         btnAtacar.setBounds(550, 490, 120, 35);
 
+        javax.swing.GroupLayout jPanel1Layout = new javax.swing.GroupLayout(jPanel1);
+        jPanel1.setLayout(jPanel1Layout);
+        jPanel1Layout.setHorizontalGroup(
+            jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGap(0, 390, Short.MAX_VALUE)
+        );
+        jPanel1Layout.setVerticalGroup(
+            jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGap(0, 290, Short.MAX_VALUE)
+        );
+
+        jPanelFondo.add(jPanel1);
+        jPanel1.setBounds(20, 160, 390, 290);
+
+        javax.swing.GroupLayout jPanel2Layout = new javax.swing.GroupLayout(jPanel2);
+        jPanel2.setLayout(jPanel2Layout);
+        jPanel2Layout.setHorizontalGroup(
+            jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGap(0, 390, Short.MAX_VALUE)
+        );
+        jPanel2Layout.setVerticalGroup(
+            jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGap(0, 290, Short.MAX_VALUE)
+        );
+
+        jPanelFondo.add(jPanel2);
+        jPanel2.setBounds(540, 160, 390, 290);
+
         jblFondo.setFont(new java.awt.Font("Monospaced", 0, 18)); // NOI18N
         jPanelFondo.add(jblFondo);
         jblFondo.setBounds(0, 0, 950, 550);
@@ -493,6 +587,14 @@ public class PantallaJuego extends javax.swing.JFrame {
 
     private void btnAtacarMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_btnAtacarMouseClicked
         // TODO add your handling code here:
+        if (esMiTurno && xSeleccionado != -1 && ySeleccionado != -1) {
+            disparar(xSeleccionado, ySeleccionado);
+            xSeleccionado = -1;
+            ySeleccionado = -1;
+        } else {
+            JOptionPane.showMessageDialog(this, "Selecciona una casilla antes de atacar o espera tu turno.");
+        }
+        
     }//GEN-LAST:event_btnAtacarMouseClicked
 
     private void btnAbandonarMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_btnAbandonarMouseClicked
@@ -510,6 +612,8 @@ public class PantallaJuego extends javax.swing.JFrame {
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton btnAbandonar;
     private javax.swing.JButton btnAtacar;
+    private javax.swing.JPanel jPanel1;
+    private javax.swing.JPanel jPanel2;
     private javax.swing.JPanel jPanelDerechos;
     private javax.swing.JPanel jPanelFondo;
     private javax.swing.JPanel jPanelHead;
