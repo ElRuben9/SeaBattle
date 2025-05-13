@@ -197,6 +197,8 @@ public class PantallaConexion extends javax.swing.JFrame {
     String ip = txtIP.getText().trim();
     int puerto;
 
+    
+    
 //    try {
 //        puerto = Integer.parseInt(txtPuerto.getText().trim());
 //    } catch (NumberFormatException e) {

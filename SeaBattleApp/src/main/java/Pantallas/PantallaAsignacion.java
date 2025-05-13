@@ -35,40 +35,39 @@ import javax.swing.*;
  */
 public class PantallaAsignacion extends javax.swing.JFrame {
 
+    private PantallaJuego nuevaPantallaJuego;
+    private PrintWriter out;
+    private BufferedReader in;
+    private Socket socket;
+
+    private String nombre;
+    private String colorString;
+    private Color colorJugador;
+
+    private boolean esServidor;
+    private boolean esJugador1;
+    private boolean yoListo = false;
+    private boolean oponenteListo = false;
+
     private Tablero tableroJugador;
+    private Tablero tableroOponente;
     private JButton[][] botonesTablero = new JButton[10][10];
-    private String orientacionActual = "horizontal"; // horizontal por defecto
-    private TipoBarco tipoSeleccionado = TipoBarco.BARCO; // Tipo por defecto (puedes mejorarlo luego)
-    private ViewModels.AsignacionViewModel vmAsignacion;
-    private boolean esJugador1; // Empezamos con jugador 1
-    private Tablero tableroJugador1;
-    private Tablero tableroJugador2;
+    private String orientacionActual = "horizontal";
+    private TipoBarco tipoSeleccionado = TipoBarco.BARCO;
     private Barco barcoActual;
-    String fondo = "recursos/interfaz/fondoPantallaPartida.png";
-    private Orientacion orientacion;
-    PantallaEscogerPartida escoger;
 
     private final Map<TipoBarco, Integer> maximos = Map.of(
-            TipoBarco.BARCO, 4, // Lancha
-            TipoBarco.CRUCERO, 3, // Destructor
+            TipoBarco.BARCO, 4,
+            TipoBarco.CRUCERO, 3,
             TipoBarco.SUBMARINO, 2,
             TipoBarco.PORTAAVIONES, 1
     );
 
     private final Map<TipoBarco, Integer> colocados = new HashMap<>();
-    
-    
-    private boolean esServidor;
-    private Socket socket;
-    
-    
-    private String nombre, colorString;
-    
-    private Color colorJugador;
-    
-    private boolean yoListo = false;
-    private boolean oponenteListo = false;
-    
+
+    private ViewModels.AsignacionViewModel vmAsignacion;
+    private PantallaEscogerPartida escoger;
+    private final String fondo = "recursos/interfaz/fondoPantallaPartida.png";
 
     /**
      * Creates new form PantallaAsignacion
@@ -78,157 +77,114 @@ public class PantallaAsignacion extends javax.swing.JFrame {
     public PantallaAsignacion(PantallaEscogerPartida escoger, boolean esServidor) {
         initComponents();
 
-        this.socket = null;
-        this.esServidor = esServidor;
         this.escoger = escoger;
-        
-        
-        if(esServidor == true){
-            esJugador1 = true;
-            
+        this.esServidor = esServidor;
+        this.esJugador1 = esServidor;
+
+        tableroJugador = new Tablero();
+
+        for (TipoBarco tipo : TipoBarco.values()) {
+            colocados.put(tipo, 0);
         }
 
         cargarInterfaz();
-        tableroJugador = new Tablero();
-        for (TipoBarco tipo : TipoBarco.values()) {
-            colocados.put(tipo, 0); // Todos inician con 0 colocados
-        }
-        
         actualizarContadores();
-        for (TipoBarco tipo : TipoBarco.values()) {
-            JButton btnTipo = new JButton(tipo.name()); // Puedes personalizar el nombre con .toString() si prefieres
-            btnTipo.addActionListener(e -> {
-                if (colocados.get(tipo) < maximos.get(tipo)) {
-                    tipoSeleccionado = tipo;
-                    barcoActual = new Barco(tipo);
-                } else {
-                    JOptionPane.showMessageDialog(this, "Ya colocaste todos los " + tipo.name().toLowerCase());
-                }
-            });
-        }
-        
-        
+
         try {
             jblConfiguracion1.setText("ID partida: " + InetAddress.getLocalHost().getHostAddress());
-            System.out.println(InetAddress.getLocalHost().getHostAddress());
         } catch (UnknownHostException ex) {
             Logger.getLogger(PantallaAsignacion.class.getName()).log(Level.SEVERE, null, ex);
         }
-        
-        
-        
-
     }
-    
+
     public void setSocket(Socket socket) {
         this.socket = socket;
-        
-//        new Thread(() ->{
-//        try{
-//        PrintWriter out = new PrintWriter(socket.getOutputStream(), true);
-//            BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
-//
-//            // Primero envía su nombre
-//            String[] datos = {nombre, colorString};
-//            String mensaje = String.join(";", datos); // "Juan;Rojo;Listo"
-//            out.println(mensaje);
-//            
-//            
-//            // Luego recibe el nombre del jugador 1
-//            String recibido = in.readLine(); // "Juan;Rojo;Listo"
-//            String[] datosRecibidos = recibido.split(";");
-//            
-//            System.out.println("Jugador 1 se llama: " + datosRecibidos[0]);
-//            txtNombreOponente3.setText(datosRecibidos[0]);
-//            
-//            if (datosRecibidos[1].equalsIgnoreCase("0,0,255")){
-//                jPanelColorOponente.setBackground(new Color(0,0,255));
-//                }
-//            
-//                if (datosRecibidos[1].equalsIgnoreCase("51,255,51")){
-//                    jPanelColorOponente.setBackground(new Color(51,255,51));
-//                }
-//
-//
-//                if (datosRecibidos[1].equalsIgnoreCase("204,0,204")){
-//                    jPanelColorOponente.setBackground(new Color(204,0,204));
-//                }
-//
-//                if (datosRecibidos[1].equalsIgnoreCase("0,255,255")){
-//                    jPanelColorOponente.setBackground(new Color(0,255,255));
-//                }
-            
-            
-            
-//        }
-//        catch(IOException e){
-//        
-//        }   
-//    }).start();
-//        
-        System.out.println(socket.getInetAddress().getAddress());
-        jblConfiguracion1.setText("ID partida: " + socket.getInetAddress().getHostAddress());
-        hiloTodosListos(); // ahora sí podemos iniciar el hilo
-    
-        
-}
-    
-    
-    public void esperarConexionDelOponente(ServerSocket serverSocket) {
+        try {
+            in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+            out = new PrintWriter(socket.getOutputStream(), true);
+
+            jblConfiguracion1.setText("ID partida: " + socket.getInetAddress().getHostAddress());
+            hiloTodosListos();
+
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public void esperarConexionDelOponente(ServerSocket servidor) {
         new Thread(() -> {
             try {
-                System.out.println("Esperando conexión del jugador 2...");
-                this.socket = serverSocket.accept();
-                System.out.println("Jugador 2 conectado desde " + socket.getInetAddress());
-                
-//                BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
-//                PrintWriter out = new PrintWriter(socket.getOutputStream(), true);
-//
-//                // Primero recibe el nombre del jugador 2
-//                String recibido = in.readLine();
-//                
-//                String[] datosRecibidos = recibido.split(";");
-//                System.out.println("Jugador 2 se llama: " + datosRecibidos[0]);
-//                txtNombreOponente3.setText(datosRecibidos[0]);
-//                
-//                 if (datosRecibidos[1].equalsIgnoreCase("0,0,255")){
-//                jPanelColorOponente.setBackground(new Color(0,0,255));
-//                }
-//            
-//                if (datosRecibidos[1].equalsIgnoreCase("51,255,51")){
-//                    jPanelColorOponente.setBackground(new Color(51,255,51));
-//                }
-//
-//
-//                if (datosRecibidos[1].equalsIgnoreCase("204,0,204")){
-//                    jPanelColorOponente.setBackground(new Color(204,0,204));
-//                }
-//
-//                if (datosRecibidos[1].equalsIgnoreCase("0,255,255")){
-//                    jPanelColorOponente.setBackground(new Color(0,255,255));
-//                }
-//
-//                // Luego envía su nombre
-//                String[] datos = {nombre, colorString};
-//                String mensaje = String.join(";", datos); // "Juan;Rojo;Listo"
-//                out.println(mensaje);
-                
-                
-                
-              
-                
-                
-                // Ahora que tienes el socket, puedes empezar el hilo de escucha
-                hiloTodosListos();
+                socket = servidor.accept();
+                in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+                out = new PrintWriter(socket.getOutputStream(), true);
 
-                SwingUtilities.invokeLater(() -> {
-                    jblConfiguracion1.setText("ID partida: " + socket.getInetAddress().getHostAddress());
-                });
+                String nombreOponente = in.readLine();
+                String segundoMensaje = in.readLine();
 
+                txtNombreOponente3.setText(nombreOponente);
+
+                // Verificar si el segundo mensaje es "LISTO" o un color
+                if ("LISTO".equals(segundoMensaje)) {
+                    // El oponente ya está listo, pero aún no tenemos su color
+                    jPanelColorOponente.setBackground(Color.GRAY); // Color provisional
+                    esperarListoYContinuar();
+                } else if ("AMBOS_LISTOS".equals(segundoMensaje)) {
+                    // Si el mensaje es "AMBOS_LISTOS", ya no procesamos como color
+                    esperarListoYContinuar();
+                } else {
+                    // El segundo mensaje es un color en formato hexadecimal
+                    try {
+                        jPanelColorOponente.setBackground(Color.decode(segundoMensaje));
+                    } catch (NumberFormatException ex) {
+                        // Maneja el caso donde el color no es válido
+                        System.out.println("Error al decodificar color: " + segundoMensaje);
+                        jPanelColorOponente.setBackground(Color.GRAY); // o el color que desees
+                    }
+
+                    esperarListoYContinuar();
+                }
+
+            } catch (IOException ex) {
+                ex.printStackTrace();
+            }
+        }).start();
+    }
+
+    private void esperarListoYContinuar() {
+        new Thread(() -> {
+            try {
+                while (true) {
+                    String recibido = in.readLine();
+                    if ("LISTO".equals(recibido)) {
+                        oponenteListo = true;
+                        if (yoListo) {
+                            out.println("AMBOS_LISTOS");
+                            out.flush();
+                            SwingUtilities.invokeLater(() -> iniciarJuego(tableroJugador, tableroOponente));
+                            break;
+                        }
+                    } else if ("AMBOS_LISTOS".equals(recibido)) {
+                        SwingUtilities.invokeLater(() -> iniciarJuego(tableroJugador, tableroOponente));
+                        break;
+                    }
+                }
             } catch (IOException e) {
                 e.printStackTrace();
             }
         }).start();
+    }
+
+    private void iniciarJuego(Tablero miTablero, Tablero tableroOponente) {
+        if (nuevaPantallaJuego == null) {
+            nuevaPantallaJuego = new PantallaJuego(socket, esJugador1, miTablero, tableroOponente);
+        }
+
+        this.setVisible(false);
+        nuevaPantallaJuego.setVisible(true);
+    }
+
+    private String toHex(Color color) {
+        return String.format("#%02x%02x%02x", color.getRed(), color.getGreen(), color.getBlue());
     }
 
     private void actualizarContadores() {
@@ -239,23 +195,19 @@ public class PantallaAsignacion extends javax.swing.JFrame {
     }
 
     private void cargarInterfaz() {
-
         PersonalizacionGeneral.colocarImagenLabel(jblFondo, fondo);
-        // PersonalizacionGeneral.imagenAJLabelMaxCalidad(jblIconApuntar, "recursos/iconos/apuntar.png");
 
-        personazilarBotones();
         vmAsignacion = new ViewModels.AsignacionViewModel();
         crearTablero();
+
         btnConfirmar.setEnabled(false);
         btnConfirmar.setVisible(false);
-        
-        cargarDatosUsuario();
 
+        cargarDatosUsuario();
     }
-    
-    private void cargarDatosUsuario(){
-    
-            try (BufferedReader reader = new BufferedReader(new FileReader("jugador.txt"))) {
+
+    private void cargarDatosUsuario() {
+        try (BufferedReader reader = new BufferedReader(new FileReader("jugador.txt"))) {
             String linea;
             while ((linea = reader.readLine()) != null) {
                 String[] partes = linea.split("=");
@@ -267,119 +219,88 @@ public class PantallaAsignacion extends javax.swing.JFrame {
                     }
                 }
             }
-            System.out.println("Nombre: " + nombre);
-            System.out.println("Color: " + colorString);
-            
+
             jblNombreJugador.setText("Tablero de: " + nombre);
-            
-            
-            
-            if (colorString.equalsIgnoreCase("0,0,255")){
-                colorJugador = new Color(0, 0, 255);
-            }
-            
-            if (colorString.equalsIgnoreCase("51,255,51")){
-                colorJugador = new Color(51, 255, 51);
-            }
-                        
-                        
-            if (colorString.equalsIgnoreCase("204,0,204")){
-                colorJugador = new Color(204, 0, 204);
-            }
-            
-            if (colorString.equalsIgnoreCase("0,255,255")){
-                colorJugador = new Color(0, 255, 255);
-            }
-            
-            
-            
-            
-            
+            asignarColorJugador(colorString);
+
         } catch (IOException e) {
             System.out.println("Error al leer el archivo: " + e.getMessage());
         }
     }
-    
-    
-    
-    private void hiloTodosListos(){
-        new Thread(() -> {
-        try {
-            System.out.println("Esperando mensaje del oponente...");
-            
-            BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
 
-            
-//            String recibido = in.readLine(); // "Juan;Rojo;Listo"
-//            String[] datosRecibidos = recibido.split(";");
-//            
-//            System.out.println("Jugador 1 se llama: " + datosRecibidos[0]);
-//            txtNombreOponente3.setText(datosRecibidos[0]);
-//            
-//            if (datosRecibidos[1].equalsIgnoreCase("0,0,255")){
-//                jPanelColorOponente.setBackground(new Color(0,0,255));
-//                }
-//            
-//                if (datosRecibidos[1].equalsIgnoreCase("51,255,51")){
-//                    jPanelColorOponente.setBackground(new Color(51,255,51));
-//                }
-//
-//
-//                if (datosRecibidos[1].equalsIgnoreCase("204,0,204")){
-//                    jPanelColorOponente.setBackground(new Color(204,0,204));
-//                }
-//
-//                if (datosRecibidos[1].equalsIgnoreCase("0,255,255")){
-//                    jPanelColorOponente.setBackground(new Color(0,255,255));
-//                }
-            
-
-
-            String mensaje;
-            while ((mensaje = in.readLine()) != null) {
-                if (mensaje.equals("LISTO")) {
-                    oponenteListo = true;
-                    System.out.println("jugador 2 listo");
-                    verificarAmbosListos();
-                    break;
-                }
-            }
-        } catch (SocketException e) {
-            System.out.println("Conexión cerrada por el otro jugador: " + e.getMessage());
-        } catch (IOException e) {
-            System.out.println("Error en la comunicación: " + e.getMessage());
+    private void asignarColorJugador(String colorString) {
+        switch (colorString) {
+            case "0,0,255":
+                colorJugador = new Color(0, 0, 255);
+                break;
+            case "51,255,51":
+                colorJugador = new Color(51, 255, 51);
+                break;
+            case "204,0,204":
+                colorJugador = new Color(204, 0, 204);
+                break;
+            case "0,255,255":
+                colorJugador = new Color(0, 255, 255);
+                break;
+            default:
+                colorJugador = Color.GRAY;
+                break;
         }
-    }).start();
-
     }
-    
+
+    private void hiloTodosListos() {
+        new Thread(() -> {
+            try {
+                while (true) {
+                    String mensaje = in.readLine();
+                    if ("LISTO".equals(mensaje)) {
+                        String tableroRecibido = in.readLine();
+
+                        Tablero tableroEnemigo = new Tablero();
+                        tableroEnemigo.deserializarBarcos(tableroRecibido, new Barco(TipoBarco.BARCO));
+
+                        oponenteListo = true;
+                        if (yoListo) {
+                            out.println("AMBOS_LISTOS");
+                            out.flush();
+                            SwingUtilities.invokeLater(() -> iniciarJuego(tableroJugador, tableroEnemigo));
+                            break;
+                        }
+
+                    } else if ("AMBOS_LISTOS".equals(mensaje)) {
+                        SwingUtilities.invokeLater(() -> iniciarJuego(tableroJugador, tableroOponente));
+                        break;
+                    }
+                }
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }).start();
+    }
 
     private void colocarBarco(int x, int y) {
-        
-        if(tipoSeleccionado.equals(TipoBarco.BARCO) && colocados.get(TipoBarco.BARCO) == 4){
+
+        if (tipoSeleccionado.equals(TipoBarco.BARCO) && colocados.get(TipoBarco.BARCO) == 4) {
             System.out.println(colocados.get(TipoBarco.BARCO));
             JOptionPane.showMessageDialog(this, "Maximo numero de barcos alcanzado.", "Error", JOptionPane.ERROR_MESSAGE);
             return;
         }
-        
-        if(tipoSeleccionado.equals(TipoBarco.CRUCERO) && colocados.get(TipoBarco.CRUCERO) == 3){
+
+        if (tipoSeleccionado.equals(TipoBarco.CRUCERO) && colocados.get(TipoBarco.CRUCERO) == 3) {
             JOptionPane.showMessageDialog(this, "Maximo numero de cruceros alcanzado.", "Error", JOptionPane.ERROR_MESSAGE);
             return;
         }
-                
-        if(tipoSeleccionado.equals(TipoBarco.SUBMARINO) && colocados.get(TipoBarco.SUBMARINO) == 2){
+
+        if (tipoSeleccionado.equals(TipoBarco.SUBMARINO) && colocados.get(TipoBarco.SUBMARINO) == 2) {
             JOptionPane.showMessageDialog(this, "Maximo numero de submarinos alcanzado.", "Error", JOptionPane.ERROR_MESSAGE);
             return;
         }
-        
-        if(tipoSeleccionado.equals(TipoBarco.PORTAAVIONES) && colocados.get(TipoBarco.PORTAAVIONES) == 1){
+
+        if (tipoSeleccionado.equals(TipoBarco.PORTAAVIONES) && colocados.get(TipoBarco.PORTAAVIONES) == 1) {
             JOptionPane.showMessageDialog(this, "Maximo numero de portaviones alcanzado.", "Error", JOptionPane.ERROR_MESSAGE);
             return;
         }
-        
-        
-        
-        
+
         if (orientacionActual.equals("horizontal") && x + barcoActual.getTamaño() > 10) {
             JOptionPane.showMessageDialog(this, "El barco no cabe aquí.", "Error", JOptionPane.ERROR_MESSAGE);
             return;
@@ -387,14 +308,14 @@ public class PantallaAsignacion extends javax.swing.JFrame {
             JOptionPane.showMessageDialog(this, "El barco no cabe aquí.", "Error", JOptionPane.ERROR_MESSAGE);
             return;
         }
-        
-        for(int i = 0; i < barcoActual.getTamaño(); i++){
-            if(orientacionActual.equals("horizontal") && botonesTablero[x + i][y].getBackground().equals(colorJugador)){
+
+        for (int i = 0; i < barcoActual.getTamaño(); i++) {
+            if (orientacionActual.equals("horizontal") && botonesTablero[x + i][y].getBackground().equals(colorJugador)) {
                 JOptionPane.showMessageDialog(this, "El espacio ya esta ocupado", "Error", JOptionPane.ERROR_MESSAGE);
                 return;
             }
-            
-            if(orientacionActual.equals("vertical") && botonesTablero[x][y + i].getBackground().equals(colorJugador)){
+
+            if (orientacionActual.equals("vertical") && botonesTablero[x][y + i].getBackground().equals(colorJugador)) {
                 JOptionPane.showMessageDialog(this, "El espacio ya esta ocupado", "Error", JOptionPane.ERROR_MESSAGE);
                 return;
             }
@@ -425,10 +346,7 @@ public class PantallaAsignacion extends javax.swing.JFrame {
 
         btnConfirmar.setEnabled(todosListos);  // Habilita el botón solo si todo está listo
         btnConfirmar.setVisible(todosListos);
-        
-        
-        
-        
+
     }
 
     // Suponiendo que ya tienes los objetos barcoActual y tableroJugador
@@ -455,78 +373,73 @@ public class PantallaAsignacion extends javax.swing.JFrame {
                         System.out.println("No se ha seleccionado un barco.");
                     }
                 });
-                
-                        // Listener para cambiar color al pasar el mouse
+
+                // Listener para cambiar color al pasar el mouse
                 boton.addMouseListener(new MouseAdapter() {
-            public void mouseEntered(MouseEvent e) {
-                if (barcoActual != null){
-                    
-                    if (orientacionActual.equals("horizontal") && x + barcoActual.getTamaño() > 10) {
-                        return;
-                    } else if (orientacionActual.equals("vertical") && y + barcoActual.getTamaño() > 10) {
-                        return;
-                }
-                    
-                    for (int i = 0; i < barcoActual.getTamaño(); i++) {
-                        try{    
-                            if (orientacionActual.equals("horizontal")) {
-                                if(botonesTablero[x + i][y].getBackground().equals(colorJugador)){
-                                    return;
-                                }
-                                botonesTablero[x + i][y].setBackground(Color.LIGHT_GRAY);
+                    public void mouseEntered(MouseEvent e) {
+                        if (barcoActual != null) {
 
-                            } else {
-                                if(botonesTablero[x][y + i].getBackground().equals(colorJugador)){
-                                    return;
-                                }
-                                botonesTablero[x][y + i].setBackground(Color.LIGHT_GRAY);
+                            if (orientacionActual.equals("horizontal") && x + barcoActual.getTamaño() > 10) {
+                                return;
+                            } else if (orientacionActual.equals("vertical") && y + barcoActual.getTamaño() > 10) {
+                                return;
                             }
-                            }
-                        catch(Exception ex){
 
-                            botonesTablero[x + i][y].setBackground(new Color(173, 216, 230));
-                        }
-            }
-                }
-            }
+                            for (int i = 0; i < barcoActual.getTamaño(); i++) {
+                                try {
+                                    if (orientacionActual.equals("horizontal")) {
+                                        if (botonesTablero[x + i][y].getBackground().equals(colorJugador)) {
+                                            return;
+                                        }
+                                        botonesTablero[x + i][y].setBackground(Color.LIGHT_GRAY);
 
-            public void mouseExited(MouseEvent e) {
-                
-                 if (barcoActual != null){
-                     
-                    if (orientacionActual.equals("horizontal") && x + barcoActual.getTamaño() > 10) {
-                        return;
-                } else if (orientacionActual.equals("vertical") && y + barcoActual.getTamaño() > 10) {
-                        return;
-                }
-                     
-                     
-                     
-                    for (int i = 0; i < barcoActual.getTamaño(); i++) {
-                        try{    
-                            if (orientacionActual.equals("horizontal")) {
-                                if(botonesTablero[x + i][y].getBackground().equals(colorJugador)){
-                                    return;
-                                }
-                                botonesTablero[x + i][y].setBackground(new Color(173, 216, 230));
+                                    } else {
+                                        if (botonesTablero[x][y + i].getBackground().equals(colorJugador)) {
+                                            return;
+                                        }
+                                        botonesTablero[x][y + i].setBackground(Color.LIGHT_GRAY);
+                                    }
+                                } catch (Exception ex) {
 
-                            } else {
-                                if(botonesTablero[x][y + i].getBackground().equals(colorJugador)){
-                                    return;
+                                    botonesTablero[x + i][y].setBackground(new Color(173, 216, 230));
                                 }
-                                botonesTablero[x][y + i].setBackground(new Color(173, 216, 230));
                             }
-                            }
-                        catch(Exception ex){
-                            botonesTablero[x + i][y].setBackground(new Color(173, 216, 230));
                         }
                     }
-                        }
-                }
 
-        });
-                
-                
+                    public void mouseExited(MouseEvent e) {
+
+                        if (barcoActual != null) {
+
+                            if (orientacionActual.equals("horizontal") && x + barcoActual.getTamaño() > 10) {
+                                return;
+                            } else if (orientacionActual.equals("vertical") && y + barcoActual.getTamaño() > 10) {
+                                return;
+                            }
+
+                            for (int i = 0; i < barcoActual.getTamaño(); i++) {
+                                try {
+                                    if (orientacionActual.equals("horizontal")) {
+                                        if (botonesTablero[x + i][y].getBackground().equals(colorJugador)) {
+                                            return;
+                                        }
+                                        botonesTablero[x + i][y].setBackground(new Color(173, 216, 230));
+
+                                    } else {
+                                        if (botonesTablero[x][y + i].getBackground().equals(colorJugador)) {
+                                            return;
+                                        }
+                                        botonesTablero[x][y + i].setBackground(new Color(173, 216, 230));
+                                    }
+                                } catch (Exception ex) {
+                                    botonesTablero[x + i][y].setBackground(new Color(173, 216, 230));
+                                }
+                            }
+                        }
+                    }
+
+                });
+
                 panelListaBarcos.add(boton); // Ese es el panel donde dice "Tipos de nave"
                 botonesTablero[i][j] = boton;
                 panelGrid.add(boton);
@@ -978,21 +891,23 @@ public class PantallaAsignacion extends javax.swing.JFrame {
     }// </editor-fold>//GEN-END:initComponents
 
     private void btnConfirmarMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_btnConfirmarMouseClicked
-        
-    yoListo = true;
-
-    try {
-        PrintWriter out = new PrintWriter(socket.getOutputStream(), true);
-        out.println("LISTO"); // Envia el mensaje al otro jugador
-        System.out.println("Mensaje 'LISTO' enviado al oponente.");
-        Thread.sleep(100);
-    } catch (IOException ex) {
-        ex.printStackTrace();
-    }   catch (InterruptedException ex) {
-            Logger.getLogger(PantallaAsignacion.class.getName()).log(Level.SEVERE, null, ex);
+        if (socket == null || out == null) {
+            JOptionPane.showMessageDialog(this, "Aún no estás conectado con el otro jugador.");
+            return;
         }
 
-    verificarAmbosListos(); // También verifica desde este lado si ambos están listos
+        yoListo = true;
+        out.println("LISTO");
+        out.println(tableroJugador.serializarBarcos());
+        out.flush();
+
+        if (oponenteListo) {
+            out.println("AMBOS_LISTOS");
+            out.flush();
+            SwingUtilities.invokeLater(() -> iniciarJuego(tableroJugador, tableroOponente));
+        } else {
+            JOptionPane.showMessageDialog(this, "Esperando al oponente...");
+        }
 
 
     }//GEN-LAST:event_btnConfirmarMouseClicked
@@ -1004,7 +919,6 @@ public class PantallaAsignacion extends javax.swing.JFrame {
             }
         }
     }
-
 
     private boolean validarPosicion(Barco barco, int x, int y) {
         for (int i = 0; i < barco.getTamaño(); i++) {
@@ -1070,23 +984,28 @@ public class PantallaAsignacion extends javax.swing.JFrame {
             JOptionPane.showMessageDialog(this, "Ya colocaste todos los Cruceros.");
         }
     }
-        
-        
+
     private void verificarAmbosListos() {
         if (yoListo && oponenteListo) {
-//            // Aquí va la lógica que quieres ejecutar cuando ambos estén listos
-//            SwingUtilities.invokeLater(() -> {
-//                JOptionPane.showMessageDialog(this, "¡Ambos jugadores están listos!");
-//                // Ejemplo: abrir la pantalla de juego
-                PantallaJuego juego = new PantallaJuego(socket, esServidor);
-                juego.setVisible(true);
-                this.setVisible(false);
-//            });
-            System.out.println("ambos listos");
+            iniciarJuego(tableroJugador, tableroOponente);
         }
-        
-        
     }//GEN-LAST:event_seleccionarCruceroActionPerformed
+    private String colorToHex(Color color) {
+        return "#" + Integer.toHexString(color.getRGB()).substring(2).toUpperCase();
+    }
+
+    private Color hexToColor(String hex) {
+        return Color.decode(hex);
+    }
+
+    private void verificarTodoListo() {
+        int totalEsperado = 10; // total de barcos: 1x4 + 2x3 + 3x2 + 4x1
+        int totalColocados = colocados.values().stream().mapToInt(Integer::intValue).sum();
+        if (totalColocados == totalEsperado) {
+            btnConfirmar.setEnabled(true);
+            btnConfirmar.setVisible(true);
+        }
+    }
 
 
     // Variables declaration - do not modify//GEN-BEGIN:variables

@@ -67,6 +67,31 @@ public class Tablero {
         }
         return true;
     }
+public boolean hayBarcoEn(int x, int y) {
+    return celdas[x][y].tieneBarco();
+}
+public String serializarBarcos() {
+    StringBuilder sb = new StringBuilder();
+    for (int i = 0; i < 10; i++) {
+        for (int j = 0; j < 10; j++) {
+            if (celdas[i][j].tieneBarco()) {
+                sb.append(i).append(",").append(j).append(";");
+            }
+        }
+    }
+    return sb.toString();
+}
+
+public void deserializarBarcos(String data, Barco barcoTipo) {
+    String[] posiciones = data.split(";");
+    for (String pos : posiciones) {
+        if (pos.isEmpty()) continue;
+        String[] partes = pos.split(",");
+        int x = Integer.parseInt(partes[0]);
+        int y = Integer.parseInt(partes[1]);
+        celdas[x][y].asignarBarco(barcoTipo);
+    }
+}
 
     public Celda[][] getCeldas() {
         return celdas;
