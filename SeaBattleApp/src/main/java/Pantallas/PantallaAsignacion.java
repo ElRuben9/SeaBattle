@@ -82,7 +82,7 @@ public class PantallaAsignacion extends javax.swing.JFrame {
         this.esJugador1 = esServidor;
 
         tableroJugador = new Tablero();
-
+        tableroOponente = new Tablero();
         for (TipoBarco tipo : TipoBarco.values()) {
             colocados.put(tipo, 0);
         }
@@ -257,7 +257,7 @@ public class PantallaAsignacion extends javax.swing.JFrame {
                         String tableroRecibido = in.readLine();
 
                         Tablero tableroEnemigo = new Tablero();
-                        tableroEnemigo.deserializarBarcos(tableroRecibido, new Barco(TipoBarco.BARCO));
+                        tableroEnemigo.deserializarBarcos(tableroRecibido);
 
                         oponenteListo = true;
                         if (yoListo) {
@@ -322,12 +322,19 @@ public class PantallaAsignacion extends javax.swing.JFrame {
         }
 
         // Si el barco cabe, lo colocamos
-        boolean colocado = tableroJugador.colocarBarco(barcoActual, x, y);
+        Barco nuevoBarco = new Barco(tipoSeleccionado);
+        nuevoBarco.setOrientacion(orientacionActual.equals("horizontal") ? Orientacion.HORIZONTAL : Orientacion.VERTICAL);
+
+        boolean colocado = tableroJugador.colocarBarco(nuevoBarco, x, y);
+
+        System.out.println("Intentando colocar barco: " + barcoActual.getTipo() + " en " + x + "," + y);
 
         if (colocado) {
             // Aumentar contador
             colocados.put(barcoActual.getTipo(), colocados.get(barcoActual.getTipo()) + 1);
             actualizarContadores();
+           System.out.println("Colocando barco " + nuevoBarco.getTipo() + " en (" + x + "," + y + ") - hashCode: " + nuevoBarco.hashCode());
+
 
             // Pintar las celdas
             for (int i = 0; i < barcoActual.getTamaño(); i++) {

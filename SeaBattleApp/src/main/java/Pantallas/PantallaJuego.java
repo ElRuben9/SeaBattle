@@ -4,6 +4,7 @@
  */
 package Pantallas;
 
+import ViewModels.JuegoViewModel;
 import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.GridLayout;
@@ -31,25 +32,22 @@ public class PantallaJuego extends javax.swing.JFrame {
 
     private ViewModels.JuegoViewModel vmJuego;
     private JButton[][] botonesTablero = new JButton[10][10];
-    
+
     private JButton[][] botonesTableroJugador = new JButton[10][10];
     private JButton[][] botonesTableroEnemigo = new JButton[10][10];
-    
+
     private Socket socket;
     private DataInputStream in;
     private DataOutputStream out;
     private boolean esMiTurno = false;
 
     private boolean esServidor;
-    private BufferedReader entrada;
-    private PrintWriter salida;
 
     private Tablero tableroJugador;
     private Tablero tableroEnemigo;
 
     String fondo = "recursos/interfaz/fondoColocarBarcos.png";
-    
-    
+
     private int xSeleccionado = -1;
     private int ySeleccionado = -1;
 
@@ -57,38 +55,55 @@ public class PantallaJuego extends javax.swing.JFrame {
      * Creates new form PantallaJuego
      */
     public PantallaJuego(Socket socket, boolean esServidor, Tablero tableroJugador, Tablero tableroDelOponente) {
+        if (tableroJugador == null || tableroDelOponente == null) {
+            throw new IllegalArgumentException("Los tableros no pueden ser nulos");
+        }
+
         this.socket = socket;
         this.esServidor = esServidor;
-        // setLayout(new GridLayout(1, 2)); 
-     
+
         initComponents();
-           
-       
+
         this.tableroEnemigo = tableroDelOponente;
         this.tableroJugador = tableroJugador;
-        
+        this.vmJuego = new JuegoViewModel(tableroJugador, tableroEnemigo);
+
         cargarDatos();
+    }
+
+    private void configurarAcciones() {
+        btnAtacar.addActionListener(e -> {
+            if (esMiTurno && xSeleccionado != -1 && ySeleccionado != -1) {
+                enviarMensaje("ATAQUE:" + xSeleccionado + "," + ySeleccionado);
+                btnAtacar.setEnabled(false); // Desactiva hasta que reciba respuesta
+            }
+        });
 
     }
-    
-    
-    private void cargarDatos(){
-        
+
+    private void cargarDatos() {
+
         personazilarBotones();
-        
+        System.out.println("TABLERO JUGADOR:");
+        for (int i = 0; i < 10; i++) {
+            for (int j = 0; j < 10; j++) {
+                System.out.print(tableroJugador.hayBarcoEn(i, j) ? "B " : ". ");
+            }
+            System.out.println();
+        }
+
         JPanel panelJugador = crearTablero(botonesTableroJugador, false);
         JPanel panelEnemigo = crearTablero(botonesTableroEnemigo, true);
-      
-        
+
         panelJugador.setBounds(jPanel1.getBounds());
         panelEnemigo.setBounds(jPanel2.getBounds());
-        
+
         // el 0 es la prioridad al mostrarse
         jPanelFondo.add(panelJugador, 0);
         jPanelFondo.add(panelEnemigo, 0);
 
         jPanelFondo.repaint();
-        
+
         pack();
         setLocationRelativeTo(null);
         setVisible(true);
@@ -100,38 +115,45 @@ public class PantallaJuego extends javax.swing.JFrame {
         } else {
             setTitle("Cliente - Batalla Naval");
         }
-        
-        
-        if(esServidor){
+
+       
+
+        if (esServidor) {
             esMiTurno = true;
         }
-        
+        btnAtacar.setEnabled(esMiTurno); // Solo puede atacar si es su turno
         mostrarBarcosEnTablero();
-        
-    
+
     }
-    
 
     private void mostrarBarcosEnTablero() {
+        // Recorremos el tablero del jugador y actualizamos el color de los botones.
         for (int i = 0; i < 10; i++) {
             for (int j = 0; j < 10; j++) {
                 if (tableroJugador.hayBarcoEn(i, j)) {
-                    botonesTableroJugador[i][j].setBackground(Color.DARK_GRAY);
+                    botonesTableroJugador[i][j].setBackground(Color.DARK_GRAY); // Color para las casillas donde hay barcos.
+                } else {
+                    botonesTableroJugador[i][j].setBackground(Color.GRAY); // Color para las casillas vacías.
                 }
             }
         }
+        for (int i = 0; i < 10; i++) {
+            for (int j = 0; j < 10; j++) {
+                botonesTableroEnemigo[i][j].setBackground(Color.LIGHT_GRAY);
+            }
+        }
+
     }
 
     private JPanel crearTablero(JButton[][] botones, boolean esTableroEnemigo) {
         JPanel panel = new JPanel(new GridLayout(10, 10));
-        
-        if(esTableroEnemigo){
+
+        if (esTableroEnemigo) {
             panel.setBounds(jPanel2.getBounds());
-        }
-        else{
+        } else {
             panel.setBounds(jPanel1.getBounds());
         }
-       // panel.setPreferredSize(new Dimension(400, 400));  // Tamaño del tablero
+        // panel.setPreferredSize(new Dimension(400, 400));  // Tamaño del tablero
         for (int x = 0; x < 10; x++) {
             for (int y = 0; y < 10; y++) {
                 JButton boton = new JButton();
@@ -141,15 +163,20 @@ public class PantallaJuego extends javax.swing.JFrame {
                     boton.setBackground(Color.LIGHT_GRAY);
                     int finalX = x, finalY = y;
                     boton.addActionListener(e -> {
-                        
+
                         limpiarSeleccionAnterior();
+                        xAnteriorSeleccionado = finalX;
+                        yAnteriorSeleccionado = finalY;
+                        xSeleccionado = finalX;
+                        ySeleccionado = finalY;
+                        botonesTableroEnemigo[finalX][finalY].setBackground(Color.YELLOW);
 
                         xSeleccionado = finalX;
                         ySeleccionado = finalY;
                         System.out.println(finalX);
                         // Opcional: resaltar visualmente la celda seleccionada
                         botonesTableroEnemigo[finalX][finalY].setBackground(Color.YELLOW);
-                        });
+                    });
                 }
                 botones[x][y] = boton;
                 panel.add(boton);
@@ -157,7 +184,6 @@ public class PantallaJuego extends javax.swing.JFrame {
         }
         return panel;
     }
-
 
     private void inicializarComunicacion() {
         try {
@@ -181,7 +207,12 @@ public class PantallaJuego extends javax.swing.JFrame {
     }
 
     private void enviarMensaje(String mensaje) {
-        salida.println(mensaje);
+        try {
+            out.writeUTF(mensaje);
+            out.flush();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
     private void procesarMensajeRecibido(String mensaje) {
@@ -194,13 +225,18 @@ public class PantallaJuego extends javax.swing.JFrame {
 
             // Aquí deberías determinar si fue impacto o agua (simplificado como impacto aleatorio)
             boolean impacto = tableroJugador.hayBarcoEn(x, y);
+            botonesTableroJugador[x][y].setOpaque(true);
             botonesTableroJugador[x][y].setBackground(impacto ? Color.RED : Color.BLUE);
+            botonesTableroJugador[x][y].repaint();
 
             try {
                 String respuesta = "RESPUESTA:" + x + "," + y + "," + (impacto ? "IMPACTO" : "AGUA");
                 out.writeUTF(respuesta);
                 out.flush();
                 esMiTurno = true; // Ahora tú puedes jugar
+                out.writeUTF("TU_TURNO");
+                out.flush();
+                btnAtacar.setEnabled(true);
                 SwingUtilities.invokeLater(()
                         -> JOptionPane.showMessageDialog(this, "¡Tu turno!")
                 );
@@ -215,9 +251,11 @@ public class PantallaJuego extends javax.swing.JFrame {
             String resultado = partes[2];
 
             Color color = resultado.equals("IMPACTO") ? Color.RED : Color.BLUE;
+            botonesTableroEnemigo[x][y].setOpaque(true);
             botonesTableroEnemigo[x][y].setBackground(color);
+            botonesTableroEnemigo[x][y].repaint();
             esMiTurno = false;
-
+            btnAtacar.setEnabled(false);
         } else if (mensaje.equals("TU_TURNO")) {
             esMiTurno = true;
             SwingUtilities.invokeLater(()
@@ -225,66 +263,6 @@ public class PantallaJuego extends javax.swing.JFrame {
             );
         }
     }
-
-    private void escucharServidor() {
-        try {
-            while (true) {
-                String mensaje = in.readUTF();
-                if (mensaje.equals("TU_TURNO")) {
-                    esMiTurno = true;
-                    SwingUtilities.invokeLater(()
-                            -> JOptionPane.showMessageDialog(this, "¡Tu turno!")
-                    );
-
-                } else if (mensaje.equals("ESPERA")) {
-                    esMiTurno = false;
-
-                } else if (mensaje.startsWith("ENEMIGO_DISPARO")) {
-                    String[] partes = mensaje.split(":");
-                    String[] coords = partes[1].split(",");
-                    int x = Integer.parseInt(coords[0]);
-                    int y = Integer.parseInt(coords[1]);
-                    String resultado = partes[2];
-
-                    if (resultado.equals("AGUA")) {
-                        botonesTableroJugador[x][y].setBackground(Color.WHITE);
-                    } else if (resultado.equals("IMPACTO")) {
-                        botonesTableroJugador[x][y].setBackground(Color.RED);
-                    }
-
-                } else if (mensaje.startsWith("RESULTADO_DISPARO")) {
-                    String[] partes = mensaje.split(":");
-                    String[] coords = partes[1].split(",");
-                    int x = Integer.parseInt(coords[0]);
-                    int y = Integer.parseInt(coords[1]);
-                    String resultado = partes[2];
-
-                    Color color = switch (resultado) {
-                        case "IMPACTO" ->
-                            Color.RED;
-                        case "HUNDIDO" ->
-                            Color.ORANGE;
-                        case "AGUA" ->
-                            Color.WHITE;
-                        default ->
-                            Color.GRAY;
-                    };
-                    botonesTablero[x][y].setBackground(color);
-                    botonesTablero[x][y].setEnabled(false);
-
-                } else if (mensaje.equals("GANASTE") || mensaje.equals("PERDISTE")) {
-                    SwingUtilities.invokeLater(()
-                            -> JOptionPane.showMessageDialog(this, mensaje)
-                    );
-                    socket.close();
-                    break;
-                }
-            }
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
-
 
     private void personazilarBotones() {
 
@@ -300,75 +278,15 @@ public class PantallaJuego extends javax.swing.JFrame {
 
     }
 
+    private int xAnteriorSeleccionado = -1;
+    private int yAnteriorSeleccionado = -1;
 
-    private void crearTableroJugador1() {
-        JPanel panelGrid = new JPanel(new java.awt.GridLayout(10, 10));
-        panelGrid.setBounds(20, 140, 390, 325);
-        panelGrid.setOpaque(false);
-
-        for (int i = 0; i < 10; i++) {
-            for (int j = 0; j < 10; j++) {
-                JButton boton = new JButton();
-                boton.setBackground(new Color(173, 216, 230));
-                boton.setFocusPainted(false);
-                int x = i;
-                int y = j;
-
-                boton.addActionListener(e -> disparar(x, y));
-                botonesTableroJugador[i][j] = boton;
-                panelGrid.add(boton);
-            }
-        }
-
-        this.getContentPane().add(panelGrid, 0);
-    }
-
-    private void crearTableroJugador2() {
-    JPanel panelGrid = new JPanel(new java.awt.GridLayout(10, 10));
-    panelGrid.setBounds(540, 140, 390, 325);
-    panelGrid.setOpaque(false);
-
-    for (int i = 0; i < 10; i++) {
-        for (int j = 0; j < 10; j++) {
-            JButton boton = new JButton();
-            boton.setBackground(new Color(173, 216, 230));
-            boton.setFocusPainted(false);
-            int x = i;
-            int y = j;
-
-            boton.addActionListener(e -> {
-                if (esMiTurno && boton.isEnabled()) {
-                    // Limpiar selección previa
-                    limpiarSeleccionAnterior();
-
-                    // Guardar la nueva selección
-                    xSeleccionado = x;
-                    ySeleccionado = y;
-
-                    // Marcar visualmente la celda seleccionada
-                    botonesTableroEnemigo[x][y].setBackground(Color.YELLOW);
-                }
-            });
-
-            botonesTableroEnemigo[i][j] = boton;
-            panelGrid.add(boton);
-        }
-    }
-
-    this.getContentPane().add(panelGrid, 0);
-}
-
-    
-    
     private void limpiarSeleccionAnterior() {
-    for (int i = 0; i < 10; i++) {
-        for (int j = 0; j < 10; j++) {
-            if (botonesTableroEnemigo[i][j].getBackground().equals(Color.YELLOW)) {
-                botonesTableroEnemigo[i][j].setBackground(new Color(173, 216, 230));
-            }
+        if (xAnteriorSeleccionado != -1 && yAnteriorSeleccionado != -1) {
+            Color colorDefault = new Color(173, 216, 230); // o Color.LIGHT_GRAY si así estaba
+            botonesTableroEnemigo[xAnteriorSeleccionado][yAnteriorSeleccionado].setBackground(colorDefault);
         }
     }
-}
 
     private void disparar(int x, int y) {
         try {
@@ -377,6 +295,10 @@ public class PantallaJuego extends javax.swing.JFrame {
             out.flush();
             esMiTurno = false;
             botonesTableroEnemigo[x][y].setBackground(Color.GRAY); // Marca intento de ataque
+
+            boolean impacto = tableroJugador.hayBarcoEn(x, y);
+            System.out.println("Ataque recibido en (" + x + "," + y + ") - ¿Hay barco? " + impacto);
+
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -594,7 +516,7 @@ public class PantallaJuego extends javax.swing.JFrame {
         } else {
             JOptionPane.showMessageDialog(this, "Selecciona una casilla antes de atacar o espera tu turno.");
         }
-        
+
     }//GEN-LAST:event_btnAtacarMouseClicked
 
     private void btnAbandonarMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_btnAbandonarMouseClicked

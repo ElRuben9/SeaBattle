@@ -9,12 +9,13 @@ package negocio;
  * @author ruben
  */
 public class Barco {
+
     private TipoBarco tipo;
     private int tamaño;
     private EstadoBarco estado;
     private int impactosRecibidos;
- private Orientacion orientacion;  
- 
+    private Orientacion orientacion;
+
     public Barco(TipoBarco tipo, int tamaño, Orientacion orientacion) {
         this.tipo = tipo;
         this.tamaño = tamaño;
@@ -23,16 +24,32 @@ public class Barco {
         this.impactosRecibidos = 0;
     }
 
+    public void setTamaño(int tamaño) {
+        this.tamaño = tamaño;
+    }
+
+    public void setEstado(EstadoBarco estado) {
+        this.estado = estado;
+    }
+
+    public void setOrientacion(Orientacion orientacion) {
+        this.orientacion = orientacion;
+    }
 
     public Barco(TipoBarco tipo) {
         this.tipo = tipo;
         switch (tipo) {
-            case PORTAAVIONES -> tamaño = 5;
-            case CRUCERO -> tamaño = 4;
-            case SUBMARINO -> tamaño = 3;
-            case BARCO -> tamaño = 2;
+            case PORTAAVIONES ->
+                tamaño = 5;
+            case CRUCERO ->
+                tamaño = 4;
+            case SUBMARINO ->
+                tamaño = 3;
+            case BARCO ->
+                tamaño = 2;
         }
     }
+
     public void tocar() {
         impactosRecibidos++;
         if (impactosRecibidos >= tamaño) {
@@ -69,5 +86,5 @@ public class Barco {
     public void setImpactosRecibidos(int impactosRecibidos) {
         this.impactosRecibidos = impactosRecibidos;
     }
-    
+
 }

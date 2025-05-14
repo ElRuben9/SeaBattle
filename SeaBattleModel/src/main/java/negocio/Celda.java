@@ -14,6 +14,18 @@ public class Celda {
     private EstadoCelda estado;
     private Barco barco;
 
+    public int getCoordenadaX() {
+        return coordenadaX;
+    }
+
+    public int getCoordenadaY() {
+        return coordenadaY;
+    }
+
+    public Barco getBarco() {
+        return barco;
+    }
+
     public Celda(int x, int y) {
         this.coordenadaX = x;
         this.coordenadaY = y;
