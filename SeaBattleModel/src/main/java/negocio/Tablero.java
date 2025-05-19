@@ -29,19 +29,21 @@ public class Tablero {
     public boolean colocarBarco(Barco barco, int x, int y) {
 
         Orientacion orientacion = barco.getOrientacion();
-        if (orientacion == Orientacion.HORIZONTAL) {
+        if (orientacion == Orientacion.VERTICAL) {
             if (y + barco.getTamaño() > 10) {
+                System.out.println("primer if");
                 return false;
             }
             for (int i = 0; i < barco.getTamaño(); i++) {
                 if (celdas[x][y + i].tieneBarco()) {
+                    System.out.println("segundo if");
                     return false; // Hay un barco en esta posición
                 }
             }
             for (int i = 0; i < barco.getTamaño(); i++) {
                 celdas[x][y + i].asignarBarco(barco); // Coloca el barco
             }
-        } else if (orientacion == Orientacion.VERTICAL) {
+        } else if (orientacion == Orientacion.HORIZONTAL) {
             if (x + barco.getTamaño() > 10) {
                 return false; // El barco no cabe
             }
