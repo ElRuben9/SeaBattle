@@ -14,12 +14,13 @@ import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.function.Consumer;
 
 public class EventBus {
+
     // Lista de subscriptores segura para múltiples hilos
     private static final List<Subscriber<?>> subscriptores = new CopyOnWriteArrayList<>();
 
     /**
-     * Suscribe un listener a un tipo específico de evento.
-     * Devuelve una Subscription que permite cancelar la suscripción.
+     * Suscribe un listener a un tipo específico de evento. Devuelve una
+     * Subscription que permite cancelar la suscripción.
      */
     public static <T extends Evento> Subscription suscribir(Class<T> tipoEvento, Consumer<T> listener) {
         Subscriber<T> sub = new Subscriber<>(tipoEvento, listener);
@@ -40,6 +41,7 @@ public class EventBus {
      * Interfaz que representa una suscripción cancelable.
      */
     public interface Subscription {
+
         void cancel();
     }
 
@@ -47,6 +49,7 @@ public class EventBus {
      * Clase interna que representa un suscriptor genérico.
      */
     private static class Subscriber<T extends Evento> {
+
         private final Class<T> tipoEvento;
         private final Consumer<T> listener;
 
@@ -62,4 +65,3 @@ public class EventBus {
         }
     }
 }
-

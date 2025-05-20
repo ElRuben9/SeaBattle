@@ -42,11 +42,6 @@
             <artifactId>SeaBattleData</artifactId>
             <version>${project.version}</version>
         </dependency>
-        <dependency>
-            <groupId>${project.groupId}</groupId>
-            <artifactId>SeaBattleModel</artifactId>
-            <version>${project.version}</version>
-        </dependency>
     </dependencies>
     <name>SeaBattleApp</name>
 </project>

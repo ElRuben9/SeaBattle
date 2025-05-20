@@ -6,6 +6,7 @@ package Pantallas;
 
 import BusEvent.EventBus;
 import BusEvent.EventoCambioUsuario;
+import ViewModels.ConfiguracionViewModel;
 import java.awt.Color;
 import java.io.BufferedReader;
 import java.io.File;
@@ -27,88 +28,62 @@ import utilerias.PersonalizacionGeneral;
  */
 public class PantallaConfiguracion extends javax.swing.JFrame {
 
-    
+    private ConfiguracionViewModel viewModel;
+
     String fondo = "recursos/interfaz/fondoConfiguracion.png";
     String correcto = "recursos/interfaz/correcto.png";
-    
+
     Border bordePorDefecto = BorderFactory.createLineBorder(Color.BLACK, 1);
-    Border bordeSeleccion = BorderFactory.createMatteBorder(7,7,7,7, Color.ORANGE);
-    
+    Border bordeSeleccion = BorderFactory.createMatteBorder(7, 7, 7, 7, Color.ORANGE);
+
     String seleccion = "";
-    
+
     Color color;
     String nombre, colorString;
-    
-    
-    
+
     PantallaPrincipal inicio;
-    
-    
+
     /**
      * Creates new form PantallaPrincipal
      */
     public PantallaConfiguracion(PantallaPrincipal inicio) {
         initComponents();
-        
-        
+
         this.inicio = inicio;
-        
-        
+
+        this.viewModel = new ConfiguracionViewModel();
         cargarInterfaz();
-        
+
     }
 
-   
-    
-    private void cargarInterfaz(){
-        
+    private void cargarInterfaz() {
+        viewModel.cargarConfiguracionDesdeArchivo();
         try {
-            
+
             PersonalizacionGeneral.colocarImagenDesenfocadaLabel(jblFondo, fondo, 12);
             personazilarBotones();
             emitirEventoCambioUsuarioDesdeArchivo();
 
-        }
-        catch (IOException ex) {
+        } catch (IOException ex) {
             Logger.getLogger(PantallaConfiguracion.class.getName()).log(Level.SEVERE, null, ex);
         }
-        
+
     }
-    
-     
-    
-    private void personazilarBotones(){
-        
+
+    private void personazilarBotones() {
+
         btnGuardar.setContentAreaFilled(false);
         btnGuardar.setBorderPainted(false);
         btnGuardar.setOpaque(false);
         btnGuardar.setUI(new BotonPersonalizado(25, new Color(21, 255, 0), new Color(21, 255, 168), 3));
-        
-        
+
         btnVolver.setContentAreaFilled(false);
         btnVolver.setBorderPainted(false);
         btnVolver.setOpaque(false);
         btnVolver.setUI(new BotonPersonalizado(25, new Color(0, 166, 255), new Color(82, 250, 255), 3));
-        
-    }
-    
-    
-    
 
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
+    }
+
     /**
      * This method is called from within the constructor to initialize the form.
      * WARNING: Do NOT modify this code. The content of this method is always
@@ -404,38 +379,26 @@ public class PantallaConfiguracion extends javax.swing.JFrame {
 
     private void btnVolverMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_btnVolverMouseClicked
         // TODO add your handling code here:
-        
+
         inicio.setVisible(true);
-        
-        this.dispose();        
+
+        this.dispose();
     }//GEN-LAST:event_btnVolverMouseClicked
 
     private void btnGuardarMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_btnGuardarMouseClicked
-          String nombreIngresado = txtUsuario.getText().trim();
+        String nombreIngresado = txtUsuario.getText().trim();
 
-    if (nombreIngresado.isEmpty() || seleccion.isEmpty()) {
-        JOptionPane.showMessageDialog(this, "Por favor, introduce un nombre y selecciona un color.", "Error", JOptionPane.ERROR_MESSAGE);
-        return;
-    }
+        viewModel.setNombreUsuario(nombreIngresado);
+        viewModel.setColorSeleccionado(color);
 
-    String colorGuardado = color.getRed() + "," + color.getGreen() + "," + color.getBlue();
+        if (viewModel.guardarConfiguracion()) {
+            JOptionPane.showMessageDialog(this, "Configuración guardada correctamente.", "Éxito", JOptionPane.INFORMATION_MESSAGE);
+            this.dispose();
+        } else {
+            JOptionPane.showMessageDialog(this, "Por favor, introduce un nombre y selecciona un color.", "Error", JOptionPane.ERROR_MESSAGE);
+        }
 
-    try (FileWriter writer = new FileWriter("jugador.txt")) {
-        writer.write("nombre=" + nombreIngresado + "\n");
-        writer.write("color=" + colorGuardado + "\n");
 
-        // Publicar el evento en el bus
-        EventBus.publicar(new EventoCambioUsuario(nombreIngresado, color));
-
-        JOptionPane.showMessageDialog(this, "Configuración guardada correctamente.", "Éxito", JOptionPane.INFORMATION_MESSAGE);
-        dispose(); // Opcional: cerrar la ventana actual
-    } catch (IOException e) {
-        JOptionPane.showMessageDialog(this, "Error al guardar los datos: " + e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
-    }
-            
-            
-    
-        
     }//GEN-LAST:event_btnGuardarMouseClicked
 
     private void btnVolverActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnVolverActionPerformed
@@ -443,43 +406,43 @@ public class PantallaConfiguracion extends javax.swing.JFrame {
     }//GEN-LAST:event_btnVolverActionPerformed
 
     private void emitirEventoCambioUsuarioDesdeArchivo() {
-    String nombre = "Usuario No Configurado";
-    Color color = Color.GRAY;
+        String nombre = "Usuario No Configurado";
+        Color color = Color.GRAY;
 
-    if (new File("jugador.txt").exists()) {
-        try (BufferedReader reader = new BufferedReader(new FileReader("jugador.txt"))) {
-            String linea;
-            while ((linea = reader.readLine()) != null) {
-                String[] partes = linea.split("=");
-                if (partes.length == 2) {
-                    if (partes[0].equals("nombre")) {
-                        nombre = partes[1];
-                    } else if (partes[0].equals("color")) {
-                        String[] rgb = partes[1].split(",");
-                        if (rgb.length == 3) {
-                            color = new Color(
-                                Integer.parseInt(rgb[0].trim()),
-                                Integer.parseInt(rgb[1].trim()),
-                                Integer.parseInt(rgb[2].trim())
-                            );
+        if (new File("jugador.txt").exists()) {
+            try (BufferedReader reader = new BufferedReader(new FileReader("jugador.txt"))) {
+                String linea;
+                while ((linea = reader.readLine()) != null) {
+                    String[] partes = linea.split("=");
+                    if (partes.length == 2) {
+                        if (partes[0].equals("nombre")) {
+                            nombre = partes[1];
+                        } else if (partes[0].equals("color")) {
+                            String[] rgb = partes[1].split(",");
+                            if (rgb.length == 3) {
+                                color = new Color(
+                                        Integer.parseInt(rgb[0].trim()),
+                                        Integer.parseInt(rgb[1].trim()),
+                                        Integer.parseInt(rgb[2].trim())
+                                );
+                            }
                         }
                     }
                 }
+            } catch (IOException | NumberFormatException ex) {
+                ex.printStackTrace();
             }
-        } catch (IOException | NumberFormatException ex) {
-            ex.printStackTrace();
         }
+
+        // Emitir el evento para que todos se actualicen
+        EventBus.publicar(new EventoCambioUsuario(nombre, color));
     }
 
-    // Emitir el evento para que todos se actualicen
-    EventBus.publicar(new EventoCambioUsuario(nombre, color));
-}
 
-    
     private void jPanelColor1MouseEntered(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_jPanelColor1MouseEntered
         // TODO add your handling code here:
         jPanelColor1.setBorder(bordeSeleccion);
-        
+
     }//GEN-LAST:event_jPanelColor1MouseEntered
 
     private void jPanelColor1MouseExited(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_jPanelColor1MouseExited
@@ -491,20 +454,20 @@ public class PantallaConfiguracion extends javax.swing.JFrame {
 
     private void jPanelColor1MouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_jPanelColor1MouseClicked
         // TODO add your handling code here:
-        
+
         seleccion = "color1";
         decorarColor();
-        
+
         color = jPanelColor1.getBackground();
-        
+
     }//GEN-LAST:event_jPanelColor1MouseClicked
 
     private void jPanelColor2MouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_jPanelColor2MouseClicked
         // TODO add your handling code here:
-        
+
         seleccion = "color2";
         decorarColor();
-        
+
         color = jPanelColor2.getBackground();
     }//GEN-LAST:event_jPanelColor2MouseClicked
 
@@ -518,17 +481,17 @@ public class PantallaConfiguracion extends javax.swing.JFrame {
 
         jPanelColor2.setBorder(bordePorDefecto);
         decorarColor();
-        
+
     }//GEN-LAST:event_jPanelColor2MouseExited
 
     private void jPanelColor3MouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_jPanelColor3MouseClicked
         // TODO add your handling code here:
-        
+
         seleccion = "color3";
         decorarColor();
-        
+
         color = jPanelColor3.getBackground();
-        
+
     }//GEN-LAST:event_jPanelColor3MouseClicked
 
     private void jPanelColor3MouseEntered(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_jPanelColor3MouseEntered
@@ -544,10 +507,10 @@ public class PantallaConfiguracion extends javax.swing.JFrame {
 
     private void jPanelColor4MouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_jPanelColor4MouseClicked
         // TODO add your handling code here:
-        
+
         seleccion = "color4";
         decorarColor();
-        
+
         color = jPanelColor4.getBackground();
     }//GEN-LAST:event_jPanelColor4MouseClicked
 
@@ -562,17 +525,13 @@ public class PantallaConfiguracion extends javax.swing.JFrame {
         decorarColor();
     }//GEN-LAST:event_jPanelColor4MouseExited
 
-    
-    
-    private void decorarColor(){
-        
-        if(seleccion.equalsIgnoreCase("")){
+    private void decorarColor() {
+
+        if (seleccion.equalsIgnoreCase("")) {
             return;
-        }
-        
-        else{
-    
-            if(seleccion.equalsIgnoreCase("color1")){
+        } else {
+
+            if (seleccion.equalsIgnoreCase("color1")) {
                 jPanelColor2.setBorder(bordePorDefecto);
                 jPanelColor3.setBorder(bordePorDefecto);
                 jPanelColor4.setBorder(bordePorDefecto);
@@ -581,7 +540,7 @@ public class PantallaConfiguracion extends javax.swing.JFrame {
 
             }
 
-            if(seleccion.equalsIgnoreCase("color2")){
+            if (seleccion.equalsIgnoreCase("color2")) {
                 jPanelColor1.setBorder(bordePorDefecto);
                 jPanelColor3.setBorder(bordePorDefecto);
                 jPanelColor4.setBorder(bordePorDefecto);
@@ -590,7 +549,7 @@ public class PantallaConfiguracion extends javax.swing.JFrame {
 
             }
 
-            if(seleccion.equalsIgnoreCase("color3")){
+            if (seleccion.equalsIgnoreCase("color3")) {
                 jPanelColor1.setBorder(bordePorDefecto);
                 jPanelColor2.setBorder(bordePorDefecto);
                 jPanelColor4.setBorder(bordePorDefecto);
@@ -599,8 +558,7 @@ public class PantallaConfiguracion extends javax.swing.JFrame {
 
             }
 
-
-            if(seleccion.equalsIgnoreCase("color4")){
+            if (seleccion.equalsIgnoreCase("color4")) {
                 jPanelColor1.setBorder(bordePorDefecto);
                 jPanelColor2.setBorder(bordePorDefecto);
                 jPanelColor3.setBorder(bordePorDefecto);
@@ -609,10 +567,9 @@ public class PantallaConfiguracion extends javax.swing.JFrame {
 
             }
         }
-        
-        
+
     }
-    
+
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton btnGuardar;

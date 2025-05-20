@@ -4,6 +4,7 @@
  */
 package Pantallas;
 
+import ViewModels.ConexionViewModel;
 import java.awt.Color;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -28,6 +29,7 @@ import java.net.Socket;
  */
 public class PantallaConexion extends javax.swing.JFrame {
 
+    private ConexionViewModel viewModel;
     String fondo = "recursos/interfaz/fondoEscogerPartida.png";
     private PantallaEscogerPartida origen;
     PantallaPrincipal inicio;
@@ -38,7 +40,8 @@ public class PantallaConexion extends javax.swing.JFrame {
     public PantallaConexion(PantallaEscogerPartida origen) {
         this.origen = origen;
         initComponents();
-
+        this.viewModel = new ConexionViewModel();
+        suscribirseEventos();
         setTitle("Conectar a Sala");
         setSize(400, 300);
         setLocationRelativeTo(null);
@@ -192,73 +195,34 @@ public class PantallaConexion extends javax.swing.JFrame {
         setLocationRelativeTo(null);
     }// </editor-fold>//GEN-END:initComponents
 
+    private void suscribirseEventos() {
+        BusEvent.EventBus.suscribir(BusEvent.EventoConexionExitosa.class, evento -> {
+            SwingUtilities.invokeLater(() -> {
+                if (evento.getSocket() != null) {
+                    PantallaAsignacion asignacion = new PantallaAsignacion(origen, false);
+                    asignacion.setSocket(evento.getSocket());
+                    asignacion.setVisible(true);
+                    this.dispose();
+                } else {
+                    JOptionPane.showMessageDialog(this, "No se pudo conectar al servidor.");
+                }
+            });
+        });
+    }
+
+
     private void btnConectarActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnConectarActionPerformed
 
         String ip = txtIP.getText().trim();
         int puerto;
-
-//    try {
-//        puerto = Integer.parseInt(txtPuerto.getText().trim());
-//    } catch (NumberFormatException e) {
-//        JOptionPane.showMessageDialog(this, "El puerto debe ser un número válido.", "Error", JOptionPane.ERROR_MESSAGE);
-//        return;
-//    }
-//
-//    System.out.println("Intentando conectar a " + ip + " en el puerto " + puerto);
-//
-//    try {
-//        Socket socket = new Socket(ip, puerto);
-//        System.out.println("Conexión establecida con el servidor");
-//        PantallaAsignacion asi = new PantallaAsignacion(origen, socket, false);
-//        asi.setVisible(true);
-//        
-//        this.dispose();
-//    } catch (IOException e) {
-//        System.out.println("Error al intentar conectar: " + e.getMessage());
-//        JOptionPane.showMessageDialog(this, "No se pudo conectar al servidor.\n" + e.getMessage(), "Error de Conexión", JOptionPane.ERROR_MESSAGE);
-//    }
-        new Thread(() -> {
-            try {
-
-                String colorString = "";
-                String nombre = "";
-
-                if (new File("jugador.txt").exists()) {
-
-                    try (BufferedReader reader = new BufferedReader(new FileReader("jugador.txt"))) {
-                        String linea;
-                        while ((linea = reader.readLine()) != null) {
-                            String[] partes = linea.split("=");
-                            if (partes.length == 2) {
-                                if (partes[0].equals("nombre")) {
-                                    nombre = partes[1];
-                                } else if (partes[0].equals("color")) {
-                                    colorString = partes[1];
-                                }
-                            }
-                        }
-                    } catch (FileNotFoundException ex) {
-                        Logger.getLogger(PantallaPrincipal.class.getName()).log(Level.SEVERE, null, ex);
-                    }
-                }
-
-                Socket socket = new Socket(ip, 5000); // IP del servidor y puerto deben coincidir
-                BusEvent.EventBus.publicar(new BusEvent.EventoConexionExitosa(socket));
-
-                System.out.println("Conectado al servidor en " + ip);
-
-                SwingUtilities.invokeLater(() -> {
-                    PantallaAsignacion asignacion = new PantallaAsignacion(origen, false); // false = soy cliente
-                    asignacion.setSocket(socket);
-                    asignacion.setVisible(true);
-                    this.setVisible(false);
-                });
-
-            } catch (IOException e) {
-                e.printStackTrace();
-                JOptionPane.showMessageDialog(this, "No se pudo conectar al servidor.");
-            }
-        }).start();
+        try {
+            puerto = Integer.parseInt(txtPuerto.getText().trim());
+        } catch (NumberFormatException e) {
+            JOptionPane.showMessageDialog(this, "El puerto debe ser un número válido.", "Error", JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+     
+        viewModel.conectar(ip, puerto);
 
 
     }//GEN-LAST:event_btnConectarActionPerformed

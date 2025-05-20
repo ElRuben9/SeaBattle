@@ -3,17 +3,18 @@
  * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
  */
 package ViewModels;
+
 import negocio.*;
 
 /**
  *
  * @author ruben
  */
-
-
 public class AsignacionViewModel {
+
     private Tablero tableroJugador;
     private Orientacion orientacion;
+
     public AsignacionViewModel() {
         tableroJugador = new Tablero();
     }
@@ -27,5 +28,3 @@ public class AsignacionViewModel {
         return tableroJugador;
     }
 }
-
-

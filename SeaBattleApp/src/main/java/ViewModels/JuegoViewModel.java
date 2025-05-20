@@ -22,14 +22,7 @@ public class JuegoViewModel {
         this.turnoJugador1 = true; // Empieza el jugador 1
     }
 
-    public boolean disparar(int x, int y) {
-        if (turnoJugador1) {
-            return tableroJugador2.realizarDisparo(x, y); // Jugador 1 dispara al tablero de Jugador 2
-        } else {
-            return tableroJugador1.realizarDisparo(x, y); // Jugador 2 dispara al tablero de Jugador 1
-        }
-    }
-
+   
     public void cambiarTurno() {
         turnoJugador1 = !turnoJugador1;
     }
@@ -38,6 +31,15 @@ public class JuegoViewModel {
         return tableroJugador1.haPerdido() || tableroJugador2.haPerdido();
     }
 
+    
+    public boolean jugadorGano() {
+        return tableroJugador1.todosLosBarcosDestruidos();
+    }
+
+    public boolean jugadorPerdio() {
+        return tableroJugador2.todosLosBarcosDestruidos();
+    }
+    
     public String verificarVictoriaJugador() {
         if (tableroJugador2.todosLosBarcosDestruidos()) {
             return "Jugador 1";
@@ -58,7 +60,19 @@ public class JuegoViewModel {
         return null;
     }
 
+    public boolean dispararYAvanzarTurno(int x, int y) {
+        boolean acierto = disparar(x, y);
+        cambiarTurno();
+        return acierto;
+    }
 
+   public boolean disparar(int x, int y) {
+        return tableroJugador2.realizarDisparo(x, y);
+    }
+
+    public boolean recibirAtaque(int x, int y) {
+        return tableroJugador1.realizarDisparo(x, y);
+    }
     
     public boolean esTurnoJugador1() {
         return turnoJugador1;
