@@ -9,6 +9,7 @@ import BusEvent.EventBus;
 import BusEvent.Evento;
 import BusEvent.FinJuegoEvent;
 import BusEvent.RespuestaAtaqueEvent;
+import Observer.ObservadorJuego;
 import ViewModels.JuegoViewModel;
 import java.awt.Color;
 import java.awt.Dimension;
@@ -33,7 +34,7 @@ import javax.swing.SwingUtilities;
  *
  * @author ruben
  */
-public class PantallaJuego extends javax.swing.JFrame {
+public class PantallaJuego extends javax.swing.JFrame implements ObservadorJuego {
 
     private ViewModels.JuegoViewModel vmJuego;
     private JButton[][] botonesTablero = new JButton[10][10];
@@ -72,10 +73,12 @@ public class PantallaJuego extends javax.swing.JFrame {
         this.esServidor = esServidor;
 
         initComponents();
+        // Primero se crea el ViewModel con los tableros
 
         this.tableroEnemigo = tableroDelOponente;
         this.tableroJugador = tableroJugador;
         this.vmJuego = new JuegoViewModel(tableroJugador, tableroEnemigo);
+        this.vmJuego.agregarObservador(this);
 
         cargarDatos();
     }
@@ -95,7 +98,6 @@ public class PantallaJuego extends javax.swing.JFrame {
             }
             System.out.println();
         }
-  
 
         JPanel panelJugador = crearTablero(botonesTableroJugador, false);
         JPanel panelEnemigo = crearTablero(botonesTableroEnemigo, true);
@@ -142,27 +144,25 @@ public class PantallaJuego extends javax.swing.JFrame {
 
     }
 
-   private void onAtaqueRecibido(AtaqueEvent event) {
+    private void onAtaqueRecibido(AtaqueEvent event) {
 
-    // Registra el ataque y actualiza el estado interno
-   boolean impacto = vmJuego.recibirAtaque(event.x, event.y);
+        // Registra el ataque y actualiza el estado interno
+        boolean impacto = vmJuego.recibirAtaque(event.x, event.y);
 
+        // Actualiza la UI en el hilo de Swing
+        SwingUtilities.invokeLater(() -> {
+            botonesTableroJugador[event.x][event.y].setBackground(impacto ? Color.RED : Color.BLUE);
 
-    // Actualiza la UI en el hilo de Swing
-    SwingUtilities.invokeLater(() -> {
-        botonesTableroJugador[event.x][event.y].setBackground(impacto ? Color.RED : Color.BLUE);
+            // Verifica en el EDT tras actualizar la UI y el modelo si todos los barcos están destruidos
+            if (vmJuego.jugadorPerdio()) {
 
-        // Verifica en el EDT tras actualizar la UI y el modelo si todos los barcos están destruidos
-        if (vmJuego.jugadorPerdio()) {
-            
-            EventBus.publicar(new FinJuegoEvent(false)); // Yo pierdo
-            enviarMensaje("FIN_JUEGO:GANASTE"); // El otro gana
-        }
-    });
+                EventBus.publicar(new FinJuegoEvent(false)); // Yo pierdo
+                enviarMensaje("FIN_JUEGO:GANASTE"); // El otro gana
+            }
+        });
 
-    EventBus.publicar(new RespuestaAtaqueEvent(event.x, event.y, impacto));
-}
-
+        EventBus.publicar(new RespuestaAtaqueEvent(event.x, event.y, impacto));
+    }
 
     private void onRespuestaAtaque(RespuestaAtaqueEvent event) {
         if (!esMiTurno) {
@@ -208,12 +208,7 @@ public class PantallaJuego extends javax.swing.JFrame {
 
     private void onFinJuego(FinJuegoEvent event) {
         SwingUtilities.invokeLater(() -> {
-            String mensaje = event.gane ? "¡Ganaste!" : "¡Perdiste!";
-            // Mostrar primero el mensaje
-            JOptionPane.showMessageDialog(this, mensaje);
-
-            // Luego cerrar ventana y cancelar subscripciones
-            this.dispose();
+          
             suscripcionAtaque.cancel();
             suscripcionRespuesta.cancel();
             suscripcionFinJuego.cancel();
@@ -403,7 +398,15 @@ public class PantallaJuego extends javax.swing.JFrame {
             suscripcionAtaque.cancel();
             suscripcionRespuesta.cancel();
             suscripcionFinJuego.cancel();
+            dispose();
         });
+
+    }
+
+    @Override
+    public void dispose() {
+        vmJuego.quitarObservador(this);
+        super.dispose();
     }
 
     private void personazilarBotones() {
@@ -673,6 +676,49 @@ public class PantallaJuego extends javax.swing.JFrame {
         dispose();
     }//GEN-LAST:event_btnAbandonarMouseClicked
 
+    @Override
+    public void onCambioTurno(boolean esTurnoJugador1) {
+        SwingUtilities.invokeLater(() -> {
+            esMiTurno = (esTurnoJugador1 == soyJugador1);
+
+            jblTurno.setText(esMiTurno ? "¡Es tu turno!" : "Turno del enemigo...");
+
+        });
+    }
+
+    @Override
+    public void onImpacto(int x, int y, boolean acierto, boolean esAtaqueEntrante) {
+        SwingUtilities.invokeLater(() -> {
+            JButton boton;
+            if (esAtaqueEntrante) {
+                boton = botonesTableroJugador[x][y];
+            } else {
+                boton = botonesTableroEnemigo[x][y];
+            }
+
+            if (acierto) {
+                boton.setBackground(Color.RED);
+                boton.setText("X");
+            } else {
+                boton.setBackground(Color.BLUE);
+                boton.setText("O");
+            }
+
+            boton.setEnabled(false);
+        });
+    }
+
+    @Override
+    public void onFinJuego(String ganador) {
+        SwingUtilities.invokeLater(() -> {
+            boolean yoGane = (ganador.equals("Jugador 1") && soyJugador1)
+                    || (ganador.equals("Jugador 2") && !soyJugador1);
+
+            String mensaje = yoGane ? "¡Ganaste la partida!" : "Has perdido...";
+            JOptionPane.showMessageDialog(this, mensaje, "Fin del Juego", JOptionPane.INFORMATION_MESSAGE);
+
+        });
+    }
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton btnAbandonar;

@@ -16,6 +16,7 @@ Pantallas\PantallaPrincipal$2.class
 utilerias\BotonPersonalizado.class
 Pantallas\PantallaConfiguracion.class
 BusEvent\Evento.class
+Observer\ObservadorJuego.class
 Pantallas\PantallaEscogerPartida$3.class
 Pantallas\PantallaResultado.class
 Pantallas\PantallaAsignacion$1.class
