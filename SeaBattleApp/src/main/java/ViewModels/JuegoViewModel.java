@@ -11,6 +11,7 @@ import negocio.Tablero;
  * @author ruben
  */
 public class JuegoViewModel {
+
     private Tablero tableroJugador1;
     private Tablero tableroJugador2;
     private boolean turnoJugador1; // true = turno Jugador 1, false = turno Jugador 2
@@ -33,18 +34,32 @@ public class JuegoViewModel {
         turnoJugador1 = !turnoJugador1;
     }
 
-  public boolean hayGanador() {
-    return tableroJugador1.haPerdido() || tableroJugador2.haPerdido();
-}
+    public boolean hayGanador() {
+        return tableroJugador1.haPerdido() || tableroJugador2.haPerdido();
+    }
 
-public String obtenerGanador() {
-    if (tableroJugador2.haPerdido()) return "Jugador 1";
-    if (tableroJugador1.haPerdido()) return "Jugador 2";
-    return null;
-}
+    public String verificarVictoriaJugador() {
+        if (tableroJugador2.todosLosBarcosDestruidos()) {
+            return "Jugador 1";
+        }
+        if (tableroJugador1.todosLosBarcosDestruidos()) {
+            return "Jugador 2";
+        }
+        return null;
+    }
+
+    public String obtenerGanador() {
+        if (tableroJugador2.haPerdido()) {
+            return "Jugador 1";
+        }
+        if (tableroJugador1.haPerdido()) {
+            return "Jugador 2";
+        }
+        return null;
+    }
 
 
-
+    
     public boolean esTurnoJugador1() {
         return turnoJugador1;
     }

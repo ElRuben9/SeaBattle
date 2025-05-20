@@ -73,11 +73,11 @@ public class PantallaConexion extends javax.swing.JFrame {
         add(btnConectar, gbc);
 
         btnConectar.addActionListener(new ActionListener() {
-    @Override
-    public void actionPerformed(ActionEvent e) {
-        btnConectarActionPerformed(e);
-    }
-});
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                btnConectarActionPerformed(e);
+            }
+        });
     }
 
     /**
@@ -194,11 +194,9 @@ public class PantallaConexion extends javax.swing.JFrame {
 
     private void btnConectarActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnConectarActionPerformed
 
-    String ip = txtIP.getText().trim();
-    int puerto;
+        String ip = txtIP.getText().trim();
+        int puerto;
 
-    
-    
 //    try {
 //        puerto = Integer.parseInt(txtPuerto.getText().trim());
 //    } catch (NumberFormatException e) {
@@ -219,55 +217,50 @@ public class PantallaConexion extends javax.swing.JFrame {
 //        System.out.println("Error al intentar conectar: " + e.getMessage());
 //        JOptionPane.showMessageDialog(this, "No se pudo conectar al servidor.\n" + e.getMessage(), "Error de Conexión", JOptionPane.ERROR_MESSAGE);
 //    }
-
         new Thread(() -> {
-        try {
-            
-            
-            String colorString = "";
-            String nombre = "";
-            
-            if(new File("jugador.txt").exists()){
-            
-                try (BufferedReader reader = new BufferedReader(new FileReader("jugador.txt"))) {
-                    String linea;
-                    while ((linea = reader.readLine()) != null) {
-                        String[] partes = linea.split("=");
-                        if (partes.length == 2) {
-                            if (partes[0].equals("nombre")) {
-                                nombre = partes[1];
-                            } else if (partes[0].equals("color")) {
-                                colorString = partes[1];
+            try {
+
+                String colorString = "";
+                String nombre = "";
+
+                if (new File("jugador.txt").exists()) {
+
+                    try (BufferedReader reader = new BufferedReader(new FileReader("jugador.txt"))) {
+                        String linea;
+                        while ((linea = reader.readLine()) != null) {
+                            String[] partes = linea.split("=");
+                            if (partes.length == 2) {
+                                if (partes[0].equals("nombre")) {
+                                    nombre = partes[1];
+                                } else if (partes[0].equals("color")) {
+                                    colorString = partes[1];
+                                }
                             }
                         }
+                    } catch (FileNotFoundException ex) {
+                        Logger.getLogger(PantallaPrincipal.class.getName()).log(Level.SEVERE, null, ex);
                     }
                 }
-                catch (FileNotFoundException ex) {
-                Logger.getLogger(PantallaPrincipal.class.getName()).log(Level.SEVERE, null, ex);
-                }
+
+                Socket socket = new Socket(ip, 5000); // IP del servidor y puerto deben coincidir
+                BusEvent.EventBus.publicar(new BusEvent.EventoConexionExitosa(socket));
+
+                System.out.println("Conectado al servidor en " + ip);
+
+                SwingUtilities.invokeLater(() -> {
+                    PantallaAsignacion asignacion = new PantallaAsignacion(origen, false); // false = soy cliente
+                    asignacion.setSocket(socket);
+                    asignacion.setVisible(true);
+                    this.setVisible(false);
+                });
+
+            } catch (IOException e) {
+                e.printStackTrace();
+                JOptionPane.showMessageDialog(this, "No se pudo conectar al servidor.");
             }
-                
-            
-            
-            
-            Socket socket = new Socket(ip, 5000); // IP del servidor y puerto deben coincidir
-            System.out.println("Conectado al servidor en " + ip);
-            
+        }).start();
 
-            SwingUtilities.invokeLater(() -> {
-                PantallaAsignacion asignacion = new PantallaAsignacion(origen, false); // false = soy cliente
-                asignacion.setSocket(socket);
-                asignacion.setVisible(true);
-                this.setVisible(false);
-            });
 
-        } catch (IOException e) {
-            e.printStackTrace();
-            JOptionPane.showMessageDialog(this, "No se pudo conectar al servidor.");
-        }
-    }).start();
-    
-    
     }//GEN-LAST:event_btnConectarActionPerformed
 
 

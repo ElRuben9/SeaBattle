@@ -4,6 +4,11 @@
  */
 package Pantallas;
 
+import BusEvent.AtaqueEvent;
+import BusEvent.EventBus;
+import BusEvent.Evento;
+import BusEvent.FinJuegoEvent;
+import BusEvent.RespuestaAtaqueEvent;
 import ViewModels.JuegoViewModel;
 import java.awt.Color;
 import java.awt.Dimension;
@@ -33,6 +38,10 @@ public class PantallaJuego extends javax.swing.JFrame {
     private ViewModels.JuegoViewModel vmJuego;
     private JButton[][] botonesTablero = new JButton[10][10];
 
+    private EventBus.Subscription suscripcionAtaque;
+    private EventBus.Subscription suscripcionRespuesta;
+    private EventBus.Subscription suscripcionFinJuego;
+
     private JButton[][] botonesTableroJugador = new JButton[10][10];
     private JButton[][] botonesTableroEnemigo = new JButton[10][10];
 
@@ -42,7 +51,7 @@ public class PantallaJuego extends javax.swing.JFrame {
     private boolean esMiTurno = false;
 
     private boolean esServidor;
-
+    private boolean soyJugador1 = false;
     private Tablero tableroJugador;
     private Tablero tableroEnemigo;
 
@@ -71,17 +80,11 @@ public class PantallaJuego extends javax.swing.JFrame {
         cargarDatos();
     }
 
-    private void configurarAcciones() {
-        btnAtacar.addActionListener(e -> {
-            if (esMiTurno && xSeleccionado != -1 && ySeleccionado != -1) {
-                enviarMensaje("ATAQUE:" + xSeleccionado + "," + ySeleccionado);
-                btnAtacar.setEnabled(false); // Desactiva hasta que reciba respuesta
-            }
-        });
-
-    }
-
     private void cargarDatos() {
+
+        suscripcionAtaque = EventBus.suscribir(AtaqueEvent.class, this::onAtaqueRecibido);
+        suscripcionRespuesta = EventBus.suscribir(RespuestaAtaqueEvent.class, this::onRespuestaAtaque);
+        suscripcionFinJuego = EventBus.suscribir(FinJuegoEvent.class, this::onFinJuego);
 
         personazilarBotones();
         System.out.println("TABLERO JUGADOR:");
@@ -91,6 +94,7 @@ public class PantallaJuego extends javax.swing.JFrame {
             }
             System.out.println();
         }
+        System.out.println("¿Todos los barcos destruidos al iniciar? " + tableroJugador.todosLosBarcosDestruidos());
 
         JPanel panelJugador = crearTablero(botonesTableroJugador, false);
         JPanel panelEnemigo = crearTablero(botonesTableroEnemigo, true);
@@ -112,11 +116,27 @@ public class PantallaJuego extends javax.swing.JFrame {
 
         if (esServidor) {
             setTitle("Servidor - Batalla Naval");
+            try {
+                out.writeUTF("ERES_JUGADOR_1");
+                out.flush();
+            } catch (IOException ex) {
+                System.out.println(ex.toString());
+            }
+
         } else {
             setTitle("Cliente - Batalla Naval");
-        }
+            try {
+                String mensajeInicial = in.readUTF();
+                if (mensajeInicial.equals("ERES_JUGADOR_1")) {
+                    soyJugador1 = false;
+                } else {
+                    soyJugador1 = true;
+                }
+            } catch (IOException ex) {
+                System.out.println(ex.toString());
+            }
 
-       
+        }
 
         if (esServidor) {
             esMiTurno = true;
@@ -124,6 +144,55 @@ public class PantallaJuego extends javax.swing.JFrame {
         btnAtacar.setEnabled(esMiTurno); // Solo puede atacar si es su turno
         mostrarBarcosEnTablero();
 
+    }
+
+    private void onAtaqueRecibido(AtaqueEvent event) {
+
+        // Actualiza el tablero del jugador y responde si hubo impacto
+        boolean impacto = tableroJugador.hayBarcoEn(event.x, event.y);
+        // Actualiza UI (hazlo en EDT)
+        SwingUtilities.invokeLater(() -> {
+            botonesTableroJugador[event.x][event.y].setBackground(impacto ? Color.RED : Color.BLUE);
+        });
+
+        EventBus.publicar(new RespuestaAtaqueEvent(event.x, event.y, impacto));
+
+        if (tableroJugador.todosLosBarcosDestruidos()) {
+            EventBus.publicar((Evento) new FinJuegoEvent(false));
+        }
+    }
+
+    private void onRespuestaAtaque(RespuestaAtaqueEvent event) {
+        // Solo procesar esto si yo fui quien hizo el ataque
+        if (!esMiTurno) {
+            return;
+        }
+        SwingUtilities.invokeLater(() -> {
+            botonesTableroEnemigo[event.x][event.y].setBackground(event.impacto ? Color.RED : Color.BLUE);
+            if (event.impacto) {
+                esMiTurno = true;
+                btnAtacar.setEnabled(true);
+                JOptionPane.showMessageDialog(this, "¡Impacto! Puedes volver a disparar.");
+            } else {
+                esMiTurno = false;
+                btnAtacar.setEnabled(false);
+            }
+        });
+    }
+
+    private void onFinJuego(FinJuegoEvent event) {
+        SwingUtilities.invokeLater(() -> {
+            String mensaje = event.gane ? "¡Ganaste!" : "¡Perdiste!";
+
+            // Mostrar primero el mensaje
+            JOptionPane.showMessageDialog(this, mensaje);
+
+            // Luego cerrar ventana y cancelar subscripciones
+            this.dispose();
+            suscripcionAtaque.cancel();
+            suscripcionRespuesta.cancel();
+            suscripcionFinJuego.cancel();
+        });
     }
 
     private void mostrarBarcosEnTablero() {
@@ -164,6 +233,11 @@ public class PantallaJuego extends javax.swing.JFrame {
                     int finalX = x, finalY = y;
                     boton.addActionListener(e -> {
 
+                        if (!esMiTurno) {
+                            JOptionPane.showMessageDialog(this, "¡Espera tu turno!");
+                            return;
+                        }
+
                         limpiarSeleccionAnterior();
                         xAnteriorSeleccionado = finalX;
                         yAnteriorSeleccionado = finalY;
@@ -174,6 +248,7 @@ public class PantallaJuego extends javax.swing.JFrame {
                         xSeleccionado = finalX;
                         ySeleccionado = finalY;
                         System.out.println(finalX);
+
                         // Opcional: resaltar visualmente la celda seleccionada
                         botonesTableroEnemigo[finalX][finalY].setBackground(Color.YELLOW);
                     });
@@ -222,24 +297,28 @@ public class PantallaJuego extends javax.swing.JFrame {
             String[] partes = mensaje.substring(7).split(",");
             int x = Integer.parseInt(partes[0]);
             int y = Integer.parseInt(partes[1]);
+            EventBus.publicar(new AtaqueEvent(x, y));
 
-            // Aquí deberías determinar si fue impacto o agua (simplificado como impacto aleatorio)
+            EventBus.publicar(new AtaqueEvent(x, y));
+
             boolean impacto = tableroJugador.hayBarcoEn(x, y);
-            botonesTableroJugador[x][y].setOpaque(true);
-            botonesTableroJugador[x][y].setBackground(impacto ? Color.RED : Color.BLUE);
-            botonesTableroJugador[x][y].repaint();
 
             try {
                 String respuesta = "RESPUESTA:" + x + "," + y + "," + (impacto ? "IMPACTO" : "AGUA");
                 out.writeUTF(respuesta);
                 out.flush();
-                esMiTurno = true; // Ahora tú puedes jugar
-                out.writeUTF("TU_TURNO");
-                out.flush();
-                btnAtacar.setEnabled(true);
-                SwingUtilities.invokeLater(()
-                        -> JOptionPane.showMessageDialog(this, "¡Tu turno!")
-                );
+
+                
+                if (tableroJugador.todosLosBarcosDestruidos()) {
+                    out.writeUTF("HE_PERDIDO");
+                    out.flush();
+                    EventBus.publicar(new FinJuegoEvent(false));
+                    SwingUtilities.invokeLater(() -> {
+                        JOptionPane.showMessageDialog(this, "¡Has perdido! Todos tus barcos han sido destruidos.");
+
+                    });
+                }
+
             } catch (IOException e) {
                 e.printStackTrace();
             }
@@ -249,18 +328,39 @@ public class PantallaJuego extends javax.swing.JFrame {
             int x = Integer.parseInt(partes[0]);
             int y = Integer.parseInt(partes[1]);
             String resultado = partes[2];
+            boolean impacto = resultado.equals("IMPACTO");
 
-            Color color = resultado.equals("IMPACTO") ? Color.RED : Color.BLUE;
-            botonesTableroEnemigo[x][y].setOpaque(true);
-            botonesTableroEnemigo[x][y].setBackground(color);
-            botonesTableroEnemigo[x][y].repaint();
-            esMiTurno = false;
-            btnAtacar.setEnabled(false);
+            EventBus.publicar(new RespuestaAtaqueEvent(x, y, impacto));
+
+            if (impacto) {
+                esMiTurno = true;
+                btnAtacar.setEnabled(true);
+                SwingUtilities.invokeLater(()
+                        -> JOptionPane.showMessageDialog(this, "¡Impacto! Puedes volver a disparar.")
+                );
+            } else {
+                esMiTurno = false;
+                btnAtacar.setEnabled(false);
+                // Le das el turno al oponente
+                try {
+                    out.writeUTF("TU_TURNO");
+                    out.flush();
+                } catch (IOException ex) {
+                    ex.printStackTrace();
+                }
+            }
+
+        } else if (mensaje.equals("HE_PERDIDO")) {
+            SwingUtilities.invokeLater(() -> {
+                JOptionPane.showMessageDialog(this, "¡Ganaste! Has destruido todos los barcos del enemigo.");
+                EventBus.publicar(new FinJuegoEvent(true));
+                
+            });
+
         } else if (mensaje.equals("TU_TURNO")) {
             esMiTurno = true;
-            SwingUtilities.invokeLater(()
-                    -> JOptionPane.showMessageDialog(this, "¡Es tu turno!")
-            );
+            btnAtacar.setEnabled(true);
+            SwingUtilities.invokeLater(() -> JOptionPane.showMessageDialog(this, "¡Tu turno!"));
         }
     }
 
@@ -291,6 +391,7 @@ public class PantallaJuego extends javax.swing.JFrame {
     private void disparar(int x, int y) {
         try {
             String mensaje = "ATAQUE:" + x + "," + y;
+
             out.writeUTF(mensaje);
             out.flush();
             esMiTurno = false;

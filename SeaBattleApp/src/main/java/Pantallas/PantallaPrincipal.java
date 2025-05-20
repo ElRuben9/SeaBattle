@@ -4,6 +4,8 @@
  */
 package Pantallas;
 
+import BusEvent.EventBus;
+import BusEvent.EventoCambioUsuario;
 import java.awt.Color;
 import java.io.BufferedReader;
 import java.io.File;
@@ -33,7 +35,11 @@ public class PantallaPrincipal extends javax.swing.JFrame {
     public PantallaPrincipal() {
         initComponents();
         
-        
+        EventBus.suscribir(EventoCambioUsuario.class, evento -> {
+    jblNombreUsuario.setText(evento.getNuevoNombre());
+    jPanelColor.setBackground(evento.getNuevoColor());
+});
+
         
         cargarInterfaz();
         

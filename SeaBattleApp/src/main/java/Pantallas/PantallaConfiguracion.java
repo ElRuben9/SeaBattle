@@ -4,8 +4,11 @@
  */
 package Pantallas;
 
+import BusEvent.EventBus;
+import BusEvent.EventoCambioUsuario;
 import java.awt.Color;
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
@@ -55,7 +58,7 @@ public class PantallaConfiguracion extends javax.swing.JFrame {
         
     }
 
-    
+   
     
     private void cargarInterfaz(){
         
@@ -63,7 +66,8 @@ public class PantallaConfiguracion extends javax.swing.JFrame {
             
             PersonalizacionGeneral.colocarImagenDesenfocadaLabel(jblFondo, fondo, 12);
             personazilarBotones();
-            cargarDatosUsuario();
+            emitirEventoCambioUsuarioDesdeArchivo();
+
         }
         catch (IOException ex) {
             Logger.getLogger(PantallaConfiguracion.class.getName()).log(Level.SEVERE, null, ex);
@@ -71,57 +75,7 @@ public class PantallaConfiguracion extends javax.swing.JFrame {
         
     }
     
-    
-    private void cargarDatosUsuario(){
-    
-            try (BufferedReader reader = new BufferedReader(new FileReader("jugador.txt"))) {
-            String linea;
-            while ((linea = reader.readLine()) != null) {
-                String[] partes = linea.split("=");
-                if (partes.length == 2) {
-                    if (partes[0].equals("nombre")) {
-                        nombre = partes[1];
-                    } else if (partes[0].equals("color")) {
-                        colorString = partes[1];
-                    }
-                }
-            }
-            System.out.println("Nombre: " + nombre);
-            txtUsuario.setText(nombre);
-            
-            if (colorString.equalsIgnoreCase("0,0,255")){
-                color = jPanelColor1.getBackground();
-                seleccion = "color1";
-                decorarColor();
-                
-                System.out.println("ese");
-            }
-            
-            if (colorString.equalsIgnoreCase("51,255,51")){
-                color = jPanelColor2.getBackground();
-                seleccion = "color2";
-                decorarColor();
-            }
-                        
-                        
-            if (colorString.equalsIgnoreCase("204,0,204")){
-                color = jPanelColor3.getBackground();
-                seleccion = "color3";
-                decorarColor();
-            }
-            
-            if (colorString.equalsIgnoreCase("0,255,255")){
-                color = jPanelColor4.getBackground();
-                seleccion = "color4";
-                decorarColor();
-            }
-            
-            
-        } catch (IOException e) {
-            System.out.println("Error al leer el archivo: " + e.getMessage());
-        }
-    }
-    
+     
     
     private void personazilarBotones(){
         
@@ -457,42 +411,30 @@ public class PantallaConfiguracion extends javax.swing.JFrame {
     }//GEN-LAST:event_btnVolverMouseClicked
 
     private void btnGuardarMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_btnGuardarMouseClicked
-        // TODO add your handling code here:
-        
-        nombre = txtUsuario.getText();
-        
-        if(nombre.isBlank()){
-            JOptionPane.showMessageDialog(this, "No puede estar el campo vacio", "Error", JOptionPane.ERROR_MESSAGE);
-        }
-        
-        if(color == null){
-            JOptionPane.showMessageDialog(this, "Debe seleccionar un color", "Error", JOptionPane.ERROR_MESSAGE);
-        }
-        
-        else{
-            JOptionPane.showMessageDialog(this, "Datos guardados", "Mensaje", JOptionPane.DEFAULT_OPTION);
-            
-            
-            System.out.println(color.getRGB());
-            
-            String colorString = color.getRed() + "," + color.getGreen() + "," + color.getBlue();
+          String nombreIngresado = txtUsuario.getText().trim();
 
-        try (FileWriter writer = new FileWriter("jugador.txt")) {
+    if (nombreIngresado.isEmpty() || seleccion.isEmpty()) {
+        JOptionPane.showMessageDialog(this, "Por favor, introduce un nombre y selecciona un color.", "Error", JOptionPane.ERROR_MESSAGE);
+        return;
+    }
+
+    String colorGuardado = color.getRed() + "," + color.getGreen() + "," + color.getBlue();
+
+    try (FileWriter writer = new FileWriter("jugador.txt")) {
+        writer.write("nombre=" + nombreIngresado + "\n");
+        writer.write("color=" + colorGuardado + "\n");
+
+        // Publicar el evento en el bus
+        EventBus.publicar(new EventoCambioUsuario(nombreIngresado, color));
+
+        JOptionPane.showMessageDialog(this, "Configuración guardada correctamente.", "Éxito", JOptionPane.INFORMATION_MESSAGE);
+        dispose(); // Opcional: cerrar la ventana actual
+    } catch (IOException e) {
+        JOptionPane.showMessageDialog(this, "Error al guardar los datos: " + e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+    }
             
-            writer.write("nombre=" + nombre + "\n");
-            writer.write("color=" + colorString + "\n");
-            System.out.println("Datos guardados correctamente.");
             
-            inicio.setVisible(true);
-            this.dispose();
-            
-        } catch (IOException e) {
-            System.out.println("Error al guardar: " + e.getMessage());
-        }
     
-            
-            
-        }
         
     }//GEN-LAST:event_btnGuardarMouseClicked
 
@@ -500,6 +442,40 @@ public class PantallaConfiguracion extends javax.swing.JFrame {
         // TODO add your handling code here:
     }//GEN-LAST:event_btnVolverActionPerformed
 
+    private void emitirEventoCambioUsuarioDesdeArchivo() {
+    String nombre = "Usuario No Configurado";
+    Color color = Color.GRAY;
+
+    if (new File("jugador.txt").exists()) {
+        try (BufferedReader reader = new BufferedReader(new FileReader("jugador.txt"))) {
+            String linea;
+            while ((linea = reader.readLine()) != null) {
+                String[] partes = linea.split("=");
+                if (partes.length == 2) {
+                    if (partes[0].equals("nombre")) {
+                        nombre = partes[1];
+                    } else if (partes[0].equals("color")) {
+                        String[] rgb = partes[1].split(",");
+                        if (rgb.length == 3) {
+                            color = new Color(
+                                Integer.parseInt(rgb[0].trim()),
+                                Integer.parseInt(rgb[1].trim()),
+                                Integer.parseInt(rgb[2].trim())
+                            );
+                        }
+                    }
+                }
+            }
+        } catch (IOException | NumberFormatException ex) {
+            ex.printStackTrace();
+        }
+    }
+
+    // Emitir el evento para que todos se actualicen
+    EventBus.publicar(new EventoCambioUsuario(nombre, color));
+}
+
+    
     private void jPanelColor1MouseEntered(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_jPanelColor1MouseEntered
         // TODO add your handling code here:
         jPanelColor1.setBorder(bordeSeleccion);

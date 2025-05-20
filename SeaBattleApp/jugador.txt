@@ -1,2 +1,2 @@
-nombre=xxc
-color=0,255,255
+nombre=Ruben
+color=51,255,51

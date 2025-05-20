@@ -16,7 +16,7 @@ import java.util.Map;
 public class Tablero {
 
     private Celda[][] celdas;
-
+    private Tablero tableroEnemigo;
     public Tablero() {
         celdas = new Celda[10][10];
         for (int i = 0; i < 10; i++) {
@@ -26,10 +26,14 @@ public class Tablero {
         }
     }
 
+    private boolean verificarImpactoEnBarcoEnemigo(int x, int y) {
+    return tableroEnemigo.realizarDisparo(x, y);
+}
+    
     public boolean colocarBarco(Barco barco, int x, int y) {
 
         Orientacion orientacion = barco.getOrientacion();
-        if (orientacion == Orientacion.HORIZONTAL) {
+        if (orientacion == Orientacion.VERTICAL) {
             if (y + barco.getTamaño() > 10) {
                 return false;
             }
@@ -41,7 +45,7 @@ public class Tablero {
             for (int i = 0; i < barco.getTamaño(); i++) {
                 celdas[x][y + i].asignarBarco(barco); // Coloca el barco
             }
-        } else if (orientacion == Orientacion.VERTICAL) {
+        } else if (orientacion == Orientacion.HORIZONTAL) {
             if (x + barco.getTamaño() > 10) {
                 return false; // El barco no cabe
             }
@@ -63,71 +67,103 @@ public class Tablero {
     }
 
     public boolean haPerdido() {
+        return todosLosBarcosDestruidos();
+    }
+
+    public boolean todosLosBarcosDestruidos() {
+        boolean hayBarcos = false;
+
         for (int i = 0; i < 10; i++) {
             for (int j = 0; j < 10; j++) {
-                if (celdas[i][j].tieneBarco() && !celdas[i][j].fueImpactado()) {
-                    return false; 
+                if (celdas[i][j].tieneBarco()) {
+                    hayBarcos = true;
+                    if (!celdas[i][j].fueImpactado()) {
+                        return false;
+                    }
                 }
             }
         }
-        return true; 
+
+        return hayBarcos;
     }
 
     public boolean hayBarcoEn(int x, int y) {
         return celdas[x][y].tieneBarco();
     }
 
-   public String serializarBarcos() {
-    StringBuilder sb = new StringBuilder();
-    Map<Barco, List<Celda>> barcos = new HashMap<>();
-    
-    // Agrupar celdas por barco
-    for (int i = 0; i < 10; i++) {
-        for (int j = 0; j < 10; j++) {
-            if (celdas[i][j].tieneBarco()) {
-                Barco barco = celdas[i][j].getBarco();
-                barcos.computeIfAbsent(barco, k -> new ArrayList<>()).add(celdas[i][j]);
+    public String serializarBarcos() {
+        StringBuilder sb = new StringBuilder();
+        Map<Barco, List<Celda>> barcos = new HashMap<>();
+
+        // Agrupar celdas por barco
+        for (int i = 0; i < 10; i++) {
+            for (int j = 0; j < 10; j++) {
+                if (celdas[i][j].tieneBarco()) {
+                    Barco barco = celdas[i][j].getBarco();
+                    barcos.computeIfAbsent(barco, k -> new ArrayList<>()).add(celdas[i][j]);
+                }
+            }
+        }
+
+        // Serializar los barcos
+        for (Map.Entry<Barco, List<Celda>> entry : barcos.entrySet()) {
+            Barco barco = entry.getKey();
+            List<Celda> celdasBarco = entry.getValue();
+            sb.append(barco.getTipo()).append(":");
+            for (Celda celda : celdasBarco) {
+                sb.append(celda.getCoordenadaX()).append(",").append(celda.getCoordenadaY()).append(";");
+            }
+            sb.append("\n");
+        }
+
+        return sb.toString();
+    }
+
+    public void marcarImpactoManual(int x, int y) {
+        celdas[x][y].setImpactado(true); // Asumiendo que tienes setImpactado
+    }
+
+    public void deserializarBarcos(String data) {
+        String[] lineas = data.split("\n");
+        for (String linea : lineas) {
+            if (linea.isEmpty()) {
+                continue;
+            }
+
+            String[] partes = linea.split(":");
+            String tipoStr = partes[0];
+            String posicionesStr = partes[1];
+
+            TipoBarco tipo = TipoBarco.valueOf(tipoStr); // Convierte el texto a enum
+            Barco nuevoBarco = new Barco(tipo);
+
+            String[] posiciones = posicionesStr.split(";");
+            for (String pos : posiciones) {
+                if (pos.isEmpty()) {
+                    continue;
+                }
+                String[] coords = pos.split(",");
+                int x = Integer.parseInt(coords[0]);
+                int y = Integer.parseInt(coords[1]);
+                celdas[x][y].asignarBarco(nuevoBarco);
             }
         }
     }
 
-    // Serializar los barcos
-    for (Map.Entry<Barco, List<Celda>> entry : barcos.entrySet()) {
-        Barco barco = entry.getKey();
-        List<Celda> celdasBarco = entry.getValue();
-        sb.append(barco.getTipo()).append(":");
-        for (Celda celda : celdasBarco) {
-            sb.append(celda.getCoordenadaX()).append(",").append(celda.getCoordenadaY()).append(";");
-        }
-        sb.append("\n");
+    private boolean esCoordenadaValida(int x, int y) {
+        return x >= 0 && x < 10 && y >= 0 && y < 10;
     }
 
-    return sb.toString();
-}
+    public void registrarImpacto(int x, int y) {
+        if (!esCoordenadaValida(x, y)) {
+            return;
+        }
 
-
-    public void deserializarBarcos(String data) {
-    String[] lineas = data.split("\n");
-    for (String linea : lineas) {
-        if (linea.isEmpty()) continue;
-        
-        String[] partes = linea.split(":");
-        String tipoStr = partes[0];
-        String posicionesStr = partes[1];
-
-        TipoBarco tipo = TipoBarco.valueOf(tipoStr); // Convierte el texto a enum
-        Barco nuevoBarco = new Barco(tipo);
-
-        String[] posiciones = posicionesStr.split(";");
-        for (String pos : posiciones) {
-            if (pos.isEmpty()) continue;
-            String[] coords = pos.split(",");
-            int x = Integer.parseInt(coords[0]);
-            int y = Integer.parseInt(coords[1]);
-            celdas[x][y].asignarBarco(nuevoBarco);
+        Celda celda = celdas[x][y];
+        if (!celda.fueImpactado()) {
+            celda.setImpactado(true);
         }
     }
-}
 
     public Celda[][] getCeldas() {
         return celdas;

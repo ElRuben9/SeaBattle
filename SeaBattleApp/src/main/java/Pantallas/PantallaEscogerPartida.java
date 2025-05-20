@@ -15,7 +15,7 @@ import javax.swing.JOptionPane;
 import javax.swing.SwingUtilities;
 import utilerias.BotonPersonalizado;
 import utilerias.PersonalizacionGeneral;
-
+import BusEvent.*;
 /**
  *
  * @author ruben
@@ -24,6 +24,7 @@ public class PantallaEscogerPartida extends javax.swing.JFrame {
 
     String fondo = "recursos/interfaz/fondoEscogerPartida.png";
 
+    private BusEvent.EventBus.Subscription subscripcion;
     PantallaPrincipal inicio;
 
     /**
@@ -33,11 +34,12 @@ public class PantallaEscogerPartida extends javax.swing.JFrame {
         initComponents();
 
         this.inicio = inicio;
-
         cargarInterfaz();
 
     }
 
+    
+    
     private void cargarInterfaz() {
         try {
 
