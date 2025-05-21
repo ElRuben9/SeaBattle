@@ -4,6 +4,7 @@
  */
 package negocio;
 
+import Factory.BarcoFactory;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -135,7 +136,7 @@ public class Tablero {
             String posicionesStr = partes[1];
 
             TipoBarco tipo = TipoBarco.valueOf(tipoStr); // Convierte el texto a enum
-            Barco nuevoBarco = new Barco(tipo);
+            Barco nuevoBarco = BarcoFactory.crearBarco(tipo, null);
 
             String[] posiciones = posicionesStr.split(";");
             for (String pos : posiciones) {

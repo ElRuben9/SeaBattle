@@ -10,6 +10,7 @@ import utilerias.PanelTransparente;
 import utilerias.PersonalizacionGeneral;
 import negocio.*;
 import DAOs.JuegoDAO;
+import Factory.BarcoFactory;
 import Pantallas.PantallaJuego;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
@@ -322,8 +323,7 @@ public class PantallaAsignacion extends javax.swing.JFrame {
         }
 
         // Si el barco cabe, lo colocamos
-        Barco nuevoBarco = new Barco(tipoSeleccionado);
-        nuevoBarco.setOrientacion(orientacionActual.equals("horizontal") ? Orientacion.HORIZONTAL : Orientacion.VERTICAL);
+        Barco nuevoBarco = BarcoFactory.crearBarco(tipoSeleccionado, orientacionActual.equals("horizontal") ? Orientacion.HORIZONTAL : Orientacion.VERTICAL);
 
         boolean colocado = tableroJugador.colocarBarco(nuevoBarco, x, y);
 
@@ -959,7 +959,7 @@ public class PantallaAsignacion extends javax.swing.JFrame {
     private void seleccionarPortaAvionesActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_seleccionarPortaAvionesActionPerformed
         if (colocados.get(TipoBarco.PORTAAVIONES) < maximos.get(TipoBarco.PORTAAVIONES)) {
             tipoSeleccionado = TipoBarco.PORTAAVIONES;
-            barcoActual = new Barco(tipoSeleccionado);
+            barcoActual = BarcoFactory.crearBarco(tipoSeleccionado, orientacionActual.equals("horizontal") ? Orientacion.HORIZONTAL : Orientacion.VERTICAL);
         } else {
             JOptionPane.showMessageDialog(this, "Ya colocaste todos los Portaaviones.");
         }
@@ -968,7 +968,7 @@ public class PantallaAsignacion extends javax.swing.JFrame {
     private void seleccionarSubmarinoActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_seleccionarSubmarinoActionPerformed
         if (colocados.get(TipoBarco.SUBMARINO) < maximos.get(TipoBarco.SUBMARINO)) {
             tipoSeleccionado = TipoBarco.SUBMARINO;
-            barcoActual = new Barco(tipoSeleccionado);
+            barcoActual = BarcoFactory.crearBarco(tipoSeleccionado, orientacionActual.equals("horizontal") ? Orientacion.HORIZONTAL : Orientacion.VERTICAL);
         } else {
             JOptionPane.showMessageDialog(this, "Ya colocaste todos los Submarinos.");
         }
@@ -977,7 +977,7 @@ public class PantallaAsignacion extends javax.swing.JFrame {
     private void seleccionarBarcoActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_seleccionarBarcoActionPerformed
         if (colocados.get(TipoBarco.BARCO) < maximos.get(TipoBarco.BARCO)) {
             tipoSeleccionado = TipoBarco.BARCO;
-            barcoActual = new Barco(tipoSeleccionado);
+            barcoActual = BarcoFactory.crearBarco(tipoSeleccionado, orientacionActual.equals("horizontal") ? Orientacion.HORIZONTAL : Orientacion.VERTICAL);
         } else {
             JOptionPane.showMessageDialog(this, "Ya colocaste todas las Lanchas.");
         }
@@ -986,7 +986,7 @@ public class PantallaAsignacion extends javax.swing.JFrame {
     private void seleccionarCruceroActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_seleccionarCruceroActionPerformed
         if (colocados.get(TipoBarco.CRUCERO) < maximos.get(TipoBarco.CRUCERO)) {
             tipoSeleccionado = TipoBarco.CRUCERO;
-            barcoActual = new Barco(tipoSeleccionado);
+            barcoActual = BarcoFactory.crearBarco(tipoSeleccionado, orientacionActual.equals("horizontal") ? Orientacion.HORIZONTAL : Orientacion.VERTICAL);
         } else {
             JOptionPane.showMessageDialog(this, "Ya colocaste todos los Cruceros.");
         }

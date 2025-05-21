@@ -36,19 +36,6 @@ public class Barco {
         this.orientacion = orientacion;
     }
 
-    public Barco(TipoBarco tipo) {
-        this.tipo = tipo;
-        switch (tipo) {
-            case PORTAAVIONES ->
-                tamaño = 5;
-            case CRUCERO ->
-                tamaño = 4;
-            case SUBMARINO ->
-                tamaño = 3;
-            case BARCO ->
-                tamaño = 2;
-        }
-    }
 
     public void tocar() {
         impactosRecibidos++;
