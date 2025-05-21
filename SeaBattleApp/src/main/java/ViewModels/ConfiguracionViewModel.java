@@ -19,6 +19,7 @@ import java.io.IOException;
  * @author ruben
  */
 public class ConfiguracionViewModel {
+    
     private String nombreUsuario;
     private Color colorSeleccionado;
 

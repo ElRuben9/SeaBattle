@@ -29,6 +29,7 @@ import javax.swing.JButton;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.SwingUtilities;
+import utilerias.Metodos;
 
 /**
  *
@@ -60,6 +61,10 @@ public class PantallaJuego extends javax.swing.JFrame implements ObservadorJuego
     private EventBus.Subscription suscripcionAtaque;
     private EventBus.Subscription suscripcionRespuesta;
     private EventBus.Subscription suscripcionFinJuego;
+    
+    
+    private String nombreJugador;
+    private String nombreOponente = "Desconocido";
 
     /**
      * Creates new form PantallaJuego
@@ -81,6 +86,17 @@ public class PantallaJuego extends javax.swing.JFrame implements ObservadorJuego
         this.vmJuego.agregarObservador(this);
 
         cargarDatos();
+        setNombreJugador(Metodos.obtenerNombre());
+        jblNombreJugador.setText(nombreJugador);
+    }
+    
+    
+    public void setNombreJugador(String nombreJugador) {
+        this.nombreJugador = nombreJugador;
+    }
+    
+    public void setNombreOponente(String nombreOponente) {
+        this.nombreOponente = nombreOponente;
     }
 
     private void cargarDatos() {
@@ -143,6 +159,8 @@ public class PantallaJuego extends javax.swing.JFrame implements ObservadorJuego
         mostrarBarcosEnTablero();
 
     }
+    
+
 
     private void onAtaqueRecibido(AtaqueEvent event) {
 
@@ -312,6 +330,15 @@ public class PantallaJuego extends javax.swing.JFrame implements ObservadorJuego
 
     private void procesarMensajeRecibido(String mensaje) {
         System.out.println("Mensaje recibido: " + mensaje);
+        
+        if (mensaje.startsWith("NOMBRE_OPONENTE:")) {
+            String nombre = mensaje.substring("NOMBRE_OPONENTE:".length());
+            setNombreOponente(nombre);
+            jblNombreJugador2.setText(nombre);
+            System.out.println("Nombre del oponente recibido: " + nombreOponente);
+        }
+        
+        
 
         if (mensaje.startsWith("ATAQUE:")) {
             String[] partes = mensaje.substring(7).split(",");
@@ -384,6 +411,8 @@ public class PantallaJuego extends javax.swing.JFrame implements ObservadorJuego
             boolean gane = resultado.equals("GANASTE");
             terminarJuego(gane);
         }
+        
+        
     }
 
     private void terminarJuego(boolean gane) {
@@ -391,6 +420,18 @@ public class PantallaJuego extends javax.swing.JFrame implements ObservadorJuego
         EventBus.publicar(new FinJuegoEvent(gane));
 
         SwingUtilities.invokeLater(() -> {
+            
+            
+            if(gane){
+                PantallaResultado resu = new PantallaResultado(nombreJugador);
+                resu.setVisible(true);
+            }
+            
+            else{
+                PantallaResultado resu = new PantallaResultado(nombreOponente);
+                resu.setVisible(true);
+            }
+            
             String mensaje = gane ? "¡Ganaste!" : "¡Has perdido! Todos tus barcos han sido destruidos.";
             JOptionPane.showMessageDialog(this, mensaje);
             // Cierra la ventana y cancela las suscripciones
@@ -399,6 +440,9 @@ public class PantallaJuego extends javax.swing.JFrame implements ObservadorJuego
             suscripcionRespuesta.cancel();
             suscripcionFinJuego.cancel();
             dispose();
+                    
+                    
+            
         });
 
     }
@@ -714,8 +758,6 @@ public class PantallaJuego extends javax.swing.JFrame implements ObservadorJuego
             boolean yoGane = (ganador.equals("Jugador 1") && soyJugador1)
                     || (ganador.equals("Jugador 2") && !soyJugador1);
 
-            String mensaje = yoGane ? "¡Ganaste la partida!" : "Has perdido...";
-            JOptionPane.showMessageDialog(this, mensaje, "Fin del Juego", JOptionPane.INFORMATION_MESSAGE);
 
         });
     }

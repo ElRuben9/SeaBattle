@@ -15,6 +15,8 @@ import java.util.Map;
  * @author ruben
  */
 public class Tablero {
+    
+    private List<Barco> barcosColocados = new ArrayList<>();
 
     private Celda[][] celdas;
     private Tablero tableroEnemigo;
@@ -34,33 +36,16 @@ public class Tablero {
     public boolean colocarBarco(Barco barco, int x, int y) {
 
         Orientacion orientacion = barco.getOrientacion();
-        if (orientacion == Orientacion.VERTICAL) {
-            if (y + barco.getTamaño() > 10) {
-                return false;
-            }
             for (int i = 0; i < barco.getTamaño(); i++) {
-                if (celdas[x][y + i].tieneBarco()) {
-                    return false; // Hay un barco en esta posición
+                if (orientacion == Orientacion.VERTICAL) {
+                    celdas[x][y + i].asignarBarco(barco);
+                } else {
+                    celdas[x + i][y].asignarBarco(barco);
                 }
             }
-            for (int i = 0; i < barco.getTamaño(); i++) {
-                celdas[x][y + i].asignarBarco(barco); // Coloca el barco
-            }
-        } else if (orientacion == Orientacion.HORIZONTAL) {
-            if (x + barco.getTamaño() > 10) {
-                return false; // El barco no cabe
-            }
-            for (int i = 0; i < barco.getTamaño(); i++) {
-                if (celdas[x + i][y].tieneBarco()) {
-                    return false; // Hay un barco en esta posición
-                }
-            }
-            for (int i = 0; i < barco.getTamaño(); i++) {
-                celdas[x + i][y].asignarBarco(barco); // Coloca el barco
-            }
-        }
+    barcosColocados.add(barco);
+    return true;
 
-        return true;
     }
 
     public boolean realizarDisparo(int x, int y) {
@@ -72,20 +57,14 @@ public class Tablero {
     }
 
     public boolean todosLosBarcosDestruidos() {
-        boolean hayBarcos = false;
+        if (barcosColocados.isEmpty()) return false;
 
-        for (int i = 0; i < 10; i++) {
-            for (int j = 0; j < 10; j++) {
-                if (celdas[i][j].tieneBarco()) {
-                    hayBarcos = true;
-                    if (!celdas[i][j].fueImpactado()) {
-                        return false;
-                    }
+        for (Barco barco : barcosColocados) {
+            if (barco.getEstado() != EstadoBarco.HUNDIDO) {
+                    return false;
                 }
             }
-        }
-
-        return hayBarcos;
+    return true;
     }
 
     public boolean hayBarcoEn(int x, int y) {
@@ -121,7 +100,7 @@ public class Tablero {
     }
 
     public void marcarImpactoManual(int x, int y) {
-        celdas[x][y].setImpactado(true); // Asumiendo que tienes setImpactado
+        celdas[x][y].disparar();
     }
 
     public void deserializarBarcos(String data) {
@@ -162,7 +141,7 @@ public class Tablero {
 
         Celda celda = celdas[x][y];
         if (!celda.fueImpactado()) {
-            celda.setImpactado(true);
+            celdas[x][y].disparar();
         }
     }
 

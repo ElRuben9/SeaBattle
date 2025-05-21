@@ -4,16 +4,59 @@
  */
 package negocio;
 
+import state.AguaState;
+import state.BarcoState;
+import state.FalloState;
+import state.IEstadoCeldaState;
+import state.ImpactoState;
+
 /**
  *
  * @author ruben
  */
 public class Celda {
 
-    private int coordenadaX;
+
+        private int coordenadaX;
     private int coordenadaY;
-    private EstadoCelda estado;
+    private IEstadoCeldaState estado;
     private Barco barco;
+
+    public Celda(int x, int y) {
+        this.coordenadaX = x;
+        this.coordenadaY = y;
+        this.estado = new AguaState();
+    }
+
+    public boolean disparar() {
+        return estado.disparar(this);
+    }
+
+    public void asignarBarco(Barco barco) {
+        this.barco = barco;
+        this.estado = new BarcoState();
+    }
+
+    public boolean fueImpactado() {
+        return estado instanceof ImpactoState || estado instanceof FalloState;
+    }
+
+    public boolean tieneBarco() {
+        return barco != null;
+    }
+
+    // Getters y setters
+    public Barco getBarco() {
+        return barco;
+    }
+
+    public void setEstado(IEstadoCeldaState nuevoEstado) {
+        this.estado = nuevoEstado;
+    }
+
+    public IEstadoCeldaState getEstado() {
+        return estado;
+    }
 
     public int getCoordenadaX() {
         return coordenadaX;
@@ -23,56 +66,16 @@ public class Celda {
         return coordenadaY;
     }
 
-    public Barco getBarco() {
-        return barco;
+    public void setCoordenadaX(int coordenadaX) {
+        this.coordenadaX = coordenadaX;
     }
 
-    public Celda(int x, int y) {
-        this.coordenadaX = x;
-        this.coordenadaY = y;
-        this.estado = EstadoCelda.AGUA;
+    public void setCoordenadaY(int coordenadaY) {
+        this.coordenadaY = coordenadaY;
     }
-
-    public boolean tieneBarco() {
-        return barco != null;
-    }
-
-    public void asignarBarco(Barco barco) {
-        this.barco = barco;
-        this.estado = EstadoCelda.BARCO;
-    }
-
-    public boolean disparar() {
-        if (estado == EstadoCelda.IMPACTO || estado == EstadoCelda.FALLO) {
-            return false;
-        }
-
-        if (barco != null) {
-            estado = EstadoCelda.IMPACTO;
-            barco.tocar();
-            return true;
-        } else {
-            estado = EstadoCelda.FALLO;
-            return false;
-        }
-    }
-
-    public void setImpactado(boolean impacto) {
-        if (impacto) {
-            estado = EstadoCelda.IMPACTO;
-            if (barco != null) {
-                barco.tocar();
-            }
-        } else {
-            estado = EstadoCelda.FALLO;
-        }
-    }
-
-    public boolean fueImpactado() {
-        return estado == EstadoCelda.IMPACTO || estado == EstadoCelda.FALLO;
-    }
-
-    public EstadoCelda getEstado() {
-        return estado;
-    }
+    
+    
+    
+    
+    
 }

@@ -50,6 +50,7 @@ Pantallas\PantallaAsignacion$6.class
 Pantallas\PantallaResultado$2.class
 BusEvent\EventoCambioUsuario.class
 Pantallas\PantallaEscogerPartida$2.class
+utilerias\Metodos.class
 Pantallas\PantallaConfiguracion$2.class
 utilerias\PanelTransparente.class
 Pantallas\PantallaJuego.class
